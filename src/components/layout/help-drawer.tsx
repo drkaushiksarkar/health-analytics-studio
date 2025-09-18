@@ -199,11 +199,39 @@ export default function HelpDrawer() {
                     <AccordionContent>
                       <h5>Step 2.1: Build the Application</h5>
                       <p>Before deployment, you need to create a production-ready build of the application. This process compiles the TypeScript/React code into optimized static HTML, CSS, and JavaScript files.</p>
-                      <ol className="list-decimal pl-5">
-                          <li>Ensure all dependencies are installed by running <code>npm install</code> (or <code>pnpm install</code> / <code>yarn</code>).</li>
-                          <li>Run the build command from your terminal: <code>npm run build</code>.</li>
-                          <li>This will generate a <code>.next</code> directory. This directory contains the complete, standalone application ready for deployment. <strong>You will deploy the contents of this directory, not the entire source code.</strong></li>
-                      </ol>
+                      
+                      <h6>Prerequisites</h6>
+                      <p>Ensure you have <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">Node.js</a> (version 20.x or later) and a package manager like <a href="https://www.npmjs.com/" target="_blank" rel="noopener noreferrer">npm</a> installed on your local machine.</p>
+
+                      <h6>Step 1: Install Dependencies</h6>
+                      <p>Open a terminal in the project's root directory. If this is the first time building or if dependencies have changed, run:</p>
+                      <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>npm install</code></pre>
+                      <p>This command reads the <code>package.json</code> and <code>package-lock.json</code> files and downloads the exact versions of all required libraries (like React, Next.js, and Tailwind CSS) into the <code>node_modules</code> directory.</p>
+                      
+                      <h6>Step 2: Run the Production Build Command</h6>
+                      <p>Execute the build script defined in <code>package.json</code>:</p>
+                      <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>npm run build</code></pre>
+                      <p>This command triggers the Next.js build process. Here’s what it does:</p>
+                      <ul className="list-disc pl-5">
+                        <li><strong>Code Compilation:</strong> It transpiles your TypeScript (.ts, .tsx) files into JavaScript that browsers can understand.</li>
+                        <li><strong>Code Bundling:</strong> It groups your application's JavaScript code and its dependencies into a few optimized files ("bundles" or "chunks").</li>
+                        <li><strong>Code Minification:</strong> It removes all unnecessary characters (like spaces, newlines, and comments) from the code to make the files smaller for faster downloads.</li>
+                        <li><strong>Static Site Generation (SSG):</strong> For pages that don't need real-time data, Next.js pre-renders them into static HTML files at build time.</li>
+                        <li><strong>Server-Side Rendering (SSR) Functions:</strong> For pages that use Server Components or fetch data on each request, Next.js creates optimized server-side functions.</li>
+                        <li><strong>CSS Optimization:</strong> It processes your Tailwind CSS classes, removes any unused styles (purging), and creates highly optimized, small CSS files.</li>
+                      </ul>
+
+                      <h6>Step 3: Verify the Build Output</h6>
+                      <p>Once the command finishes (it may take a minute or two), a new directory named <code>.next</code> will be created in your project root. This is your production build artifact. It contains everything needed to run your application in a production environment.</p>
+                      <p>You should see output in your terminal summarizing the build, including page sizes and chunk details. A successful build will end without any errors.</p>
+                      <p><strong>Crucially, you only need to deploy the <code>.next</code> directory, along with <code>package.json</code>, <code>public/</code>, and your <code>node_modules</code> to the server. You do not need to deploy the entire <code>src</code> directory or other development files.</strong></p>
+
+                      <h6>Troubleshooting Common Build Errors</h6>
+                      <ul className="list-disc pl-5">
+                          <li><strong>Type Errors:</strong> If the build fails with TypeScript errors, run <code>npm run typecheck</code> to see them clearly. Fix any type mismatches in your code before attempting to build again.</li>
+                          <li><strong>Module Not Found:</strong> This usually means a dependency is missing. Try deleting the <code>node_modules</code> directory and the <code>package-lock.json</code> file, then run <code>npm install</code> again.</li>
+                          <li><strong>Configuration Errors:</strong> Errors in <code>next.config.ts</code> or <code>tailwind.config.ts</code> can cause the build to fail. Check the terminal output for clues pointing to these files.</li>
+                      </ul>
 
                       <h5>Step 2.2: Prepare the Server Environment</h5>
                       <p>The application runs on <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">Node.js</a>. Your server (whether it's a cloud VM like an EC2 instance, or an on-premise server like Matrox) must have Node.js installed.</p>
