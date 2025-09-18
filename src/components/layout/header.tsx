@@ -15,9 +15,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Home, LogOut, PanelLeft, Search, Settings } from 'lucide-react';
+import { HelpCircle, LogOut, PanelLeft, Search, Settings } from 'lucide-react';
 import Link from 'next/link';
 import AppSidebar from './app-sidebar';
+import HelpDrawer from './help-drawer';
 
 export default function Header() {
   const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
@@ -43,6 +44,7 @@ export default function Header() {
           className="w-full rounded-lg bg-secondary pl-8 md:w-[200px] lg:w-[320px]"
         />
       </div>
+      <HelpDrawer />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
