@@ -144,7 +144,7 @@ export default function Header() {
               <div className="text-destructive">{searchError}</div>
             ) : (
               <div className="prose prose-sm dark:prose-invert max-w-none">
-                <p>{searchResult}</p>
+                <p className="text-foreground">{searchResult}</p>
               </div>
             )}
           </div>
