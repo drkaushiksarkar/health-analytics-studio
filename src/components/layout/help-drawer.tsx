@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { HelpCircle, FileText, BarChart2, Map, Users, Settings, Database, Filter, Download, MousePointerClick, AreaChart, MapPin } from 'lucide-react';
+import { HelpCircle, FileText, BarChart2, Map, Users, Settings, Database, Filter, Download, MousePointerClick, AreaChart, MapPin, Folder, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -30,13 +30,13 @@ export default function HelpDrawer() {
 
       <SheetContent side="right" className="w-[520px] sm:max-w-xl">
         <SheetHeader>
-          <SheetTitle>Setup & Matrox Migration</SheetTitle>
+          <SheetTitle>Help & Developer Guide</SheetTitle>
         </SheetHeader>
         <div className="py-4">
           <Tabs defaultValue="setup">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="setup">Setup Guide</TabsTrigger>
-              <TabsTrigger value="migration">Matrox Migration</TabsTrigger>
+              <TabsTrigger value="setup">User Guide</TabsTrigger>
+              <TabsTrigger value="developer">Developer Guide</TabsTrigger>
             </TabsList>
             <ScrollArea className="h-[calc(100vh-10rem)]">
             <TabsContent value="setup" className="p-1">
@@ -146,58 +146,104 @@ export default function HelpDrawer() {
               </div>
             </TabsContent>
 
-            <TabsContent value="migration" className="p-1">
+            <TabsContent value="developer" className="p-1">
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <p>
-                  This guide outlines the baby steps for migrating your team and data from the legacy Matrox system to the new, real-time DiseaseVision platform.
+                  This guide provides a technical overview of the application's architecture and instructions for deploying it to an external server.
                 </p>
 
                 <Accordion type="single" collapsible defaultValue="item-1">
                   <AccordionItem value="item-1">
                     <AccordionTrigger>
-                      <Database className="mr-2" />
-                      Phase 1: Data Mapping & Integration
+                      <Folder className="mr-2" />
+                      Phase 1: Application Architecture Guide
                     </AccordionTrigger>
                     <AccordionContent>
-                        <h5>Step 1.1: Map Location Hierarchy</h5>
-                        <p>The first step is to ensure your old location data maps to the new system's structure. DiseaseVision uses a clear parent-child hierarchy.</p>
-                         <ol className="list-decimal pl-5">
-                            <li>Export your location list from Matrox.</li>
-                            <li>In your export script, create two columns: `new_id` and `parent_id`.</li>
-                            <li>Map Matrox `Region` to DiseaseVision `Division`. For example, Matrox's "Dhaka Region" becomes the `genland-dhaka` division.</li>
-                            <li>Map Matrox `Area` to DiseaseVision `District`. For example, Matrox's "North Dhaka" area becomes the `dhaka-north` district, and you must set its `parent_id` to `genland-dhaka`.</li>
-                            <li>Update `src/lib/data.ts` with your new locations.</li>
-                        </ol>
-
-                         <h5>Step 1.2: Map Predictive Features</h5>
-                         <p>The predictive model in DiseaseVision uses new, time-lagged features. You must transform your historical data from Matrox to match this format for accurate back-testing.</p>
-                         <ol className="list-decimal pl-5">
-                             <li><strong>Rainfall:</strong> For a case reported on a given day, the model needs rainfall data from 14 days prior. Your ETL script must join `case_history` with `weather_logs` on `date - 14 days`. Matrox `precip_mm` maps to `Rainfall (14d lag)`.</li>
-                             <li><strong>Temperature:</strong> Similarly, map Matrox `temp_c` to `Temperature (7d lag)`.</li>
-                             <li><strong>Case History:</strong> Map Matrox `case_history` to `Previous Cases (7d)`.</li>
-                         </ol>
-                         <p>The `Feature Importance` chart on the dashboard will help you verify that these new features are influencing predictions as expected.</p>
+                        <h5>Project Structure Overview</h5>
+                        <p>This is a <a href="https://nextjs.org/" target="_blank" rel="noopener noreferrer">Next.js</a> application built with the App Router, <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">React</a>, and <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener noreferrer">TypeScript</a>. Styling is handled by <a href="https://tailwindcss.com/" target="_blank" rel="noopener noreferrer">Tailwind CSS</a> and <a href="https://ui.shadcn.com/" target="_blank" rel="noopener noreferrer">shadcn/ui</a> components. The backend AI capabilities are powered by <a href="https://firebase.google.com/docs/genkit" target="_blank" rel="noopener noreferrer">Genkit</a>.</p>
+                         <ul className="list-disc pl-5">
+                            <li><strong><code>src/app/</code></strong>: Core application routing and pages. <code>page.tsx</code> is the main entry point for the dashboard UI. <code>layout.tsx</code> is the root layout.</li>
+                            <li><strong><code>src/components/</code></strong>: Contains all React components.
+                                <ul className="list-disc pl-5">
+                                    <li><code>dashboard/</code>: High-level widgets for the dashboard grid (e.g., <code>TimeSeriesChart</code>, <code>ChoroplethMap</code>).</li>
+                                    <li><code>filters/</code>: Components used in the sidebar for data filtering.</li>
+                                    <li><code>layout/</code>: Structural components like the <code>Header</code>, <code>AppSidebar</code>, and this <code>HelpDrawer</code>.</li>
+                                    <li><code>ui/</code>: Base UI components from shadcn/ui (Button, Card, etc.).</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>src/lib/</code></strong>: Shared utilities, data, and type definitions.
+                                <ul className="list-disc pl-5">
+                                    <li><code>data.ts</code>: Currently holds mock data for the dashboard. In a production setup, this would be replaced with API calls to a real database.</li>
+                                    <li><code>types.ts</code>: TypeScript interfaces for our data models (<code>Location</code>, <code>Disease</code>, etc.).</li>
+                                    <li><code>utils.ts</code>: Utility functions, including the <code>cn</code> helper for merging Tailwind classes.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>src/ai/</code></strong>: Contains all Genkit-related code for generative AI features.
+                                <ul className="list-disc pl-5">
+                                    <li><code>genkit.ts</code>: Initializes and configures the core Genkit AI instance.</li>
+                                    <li><code>flows/</code>: Defines the multi-step AI workflows, such as <code>generate-report-from-prompt.ts</code>, which orchestrates the LLM call for report generation.</li>
+                                </ul>
+                            </li>
+                            <li><strong><code>public/</code></strong>: Static assets, which are publicly accessible.</li>
+                             <li><strong><code>next.config.ts</code></strong>: Configuration file for the Next.js application.</li>
+                             <li><strong><code>package.json</code></strong>: Defines project dependencies and scripts.</li>
+                        </ul>
                     </AccordionContent>
                   </AccordionItem>
 
                   <AccordionItem value="item-2">
                     <AccordionTrigger>
-                      <Users className="mr-2" />
-                      Phase 2: User Training & Onboarding
+                      <Server className="mr-2" />
+                      Phase 2: Server Deployment Guide
                     </AccordionTrigger>
                     <AccordionContent>
-                      <h5>Step 2.1: Introduce the New UI</h5>
+                      <h5>Step 2.1: Build the Application</h5>
+                      <p>Before deployment, you need to create a production-ready build of the application. This process compiles the TypeScript/React code into optimized static HTML, CSS, and JavaScript files.</p>
                       <ol className="list-decimal pl-5">
-                          <li>Hold a training session and walk users through the "Setup Guide" tab of this help panel.</li>
-                          <li>Emphasize the interactivity: demonstrate how changing a filter in the sidebar instantly updates all charts. This is a major improvement over Matrox's static reports.</li>
-                          <li>Show them how to use the `Disease Case Trends` brush tool to investigate specific time ranges, a feature unavailable in Matrox.</li>
+                          <li>Ensure all dependencies are installed by running <code>npm install</code> (or <code>pnpm install</code> / <code>yarn</code>).</li>
+                          <li>Run the build command from your terminal: <code>npm run build</code>.</li>
+                          <li>This will generate a <code>.next</code> directory. This directory contains the complete, standalone application ready for deployment. <strong>You will deploy the contents of this directory, not the entire source code.</strong></li>
                       </ol>
 
-                      <h5>Step 2.2: Explain the AI-Powered Features</h5>
-                      <ol className="list-decimal pl-5">
-                          <li><strong>Feature Importance:</strong> Explain that this chart provides unprecedented transparency into "why" the model is making a certain prediction, helping to build trust in the system.</li>
-                          <li><strong>AI Report Downloader:</strong> Introduce the "Download Report" button. Clarify that it uses Generative AI to create a summary on-demand based on their filters, replacing the old, manually-prepared Matrox reports.</li>
-                      </ol>
+                      <h5>Step 2.2: Prepare the Server Environment</h5>
+                      <p>The application runs on <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">Node.js</a>. Your server (whether it's a cloud VM like an EC2 instance, or an on-premise server like Matrox) must have Node.js installed.</p>
+                       <ol className="list-decimal pl-5">
+                           <li>Install a recent LTS version of Node.js (e.g., 20.x or later) on your server.</li>
+                           <li>You will also need a process manager like <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener noreferrer">PM2</a> to keep the application running continuously and manage logs. Install it globally: <code>npm install -g pm2</code>.</li>
+                           <li>Set up environment variables. Create a <code>.env.local</code> file in the root of your project directory on the server. This is where you'll put secrets like your <code>GEMINI_API_KEY</code>. This file is git-ignored and should never be committed to source control.</li>
+                       </ol>
+
+                      <h5>Step 2.3: Deploy and Run the Application</h5>
+                      <p>Transfer your project files to the server and start the application.</p>
+                       <ol className="list-decimal pl-5">
+                           <li>Copy the entire project folder (including the <code>.next</code> directory, <code>public</code>, and <code>package.json</code>) to your server using a tool like <code>scp</code> or <code>rsync</code>.</li>
+                           <li>On the server, navigate to the project directory and install only the production dependencies: <code>npm install --omit=dev</code>.</li>
+                           <li>Use PM2 to start the Next.js application: <code>pm2 start npm --name "diseasevision" -- run start</code>. The <code>-- run start</code> part tells PM2 to execute the "start" script defined in your <code>package.json</code>.</li>
+                           <li>Your application is now running. By default, it listens on port 9002 (as configured in `package.json`).</li>
+                       </ol>
+
+                        <h5>Step 2.4 (Optional): Configure a Reverse Proxy (e.g., Nginx)</h5>
+                        <p>To serve your application on standard ports (like 80 for HTTP or 443 for HTTPS) and to handle SSL, you should use a reverse proxy like Nginx.</p>
+                         <ol className="list-decimal pl-5">
+                             <li>Install Nginx on your server.</li>
+                             <li>Create a new Nginx site configuration file (e.g., in <code>/etc/nginx/sites-available/diseasevision</code>).</li>
+                             <li>Add a server block to proxy requests to your running Node.js application:
+                                 <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`server {
+    listen 80;
+    server_name your_domain.com;
+
+    location / {
+        proxy_pass http://localhost:9002;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}`}</code></pre>
+                             </li>
+                             <li>Enable the site and restart Nginx. Now, traffic to <code>your_domain.com</code> will be securely routed to your application.</li>
+                         </ol>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
