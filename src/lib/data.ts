@@ -4,7 +4,6 @@ import type {
   Location,
   RiskData,
   TimeSeriesDataPoint,
-  WeatherData,
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 
@@ -15,12 +14,13 @@ export const diseases: Disease[] = [
 ];
 
 export const locations: Location[] = [
-  { id: 'genland', name: 'Genland', level: 'country' },
-  { id: 'genland-dhaka', name: 'Dhaka', level: 'division', parent_id: 'genland' },
-  { id: 'genland-chittagong', name: 'Chittagong', level: 'division', parent_id: 'genland' },
-  { id: 'dhaka-north', name: 'Dhaka North', level: 'district', parent_id: 'genland-dhaka' },
-  { id: 'dhaka-south', name: 'Dhaka South', level: 'district', parent_id: 'genland-dhaka' },
-  { id: 'ctg-main', name: 'Chittagong Main', level: 'district', parent_id: 'genland-chittagong' },
+  { id: 'bangladesh', name: 'Bangladesh', level: 'country' },
+  { id: 'dhaka-div', name: 'Dhaka Division', level: 'division', parent_id: 'bangladesh' },
+  { id: 'chattogram-div', name: 'Chattogram Division', level: 'division', parent_id: 'bangladesh' },
+  { id: 'dhaka-dist', name: 'Dhaka', level: 'district', parent_id: 'dhaka-div' },
+  { id: 'gazipur-dist', name: 'Gazipur', level: 'district', parent_id: 'dhaka-div' },
+  { id: 'chattogram-dist', name: 'Chattogram', level: 'district', parent_id: 'chattogram-div' },
+  { id: 'coxs-bazar-dist', name: 'Cox\'s Bazar', level: 'district', parent_id: 'chattogram-div' },
 ];
 
 export const generateTimeSeriesData = (days = 30): TimeSeriesDataPoint[] => {
@@ -59,12 +59,6 @@ export const featureImportanceData: FeatureImportance[] = [
     { feature: 'Previous Cases (7d)', importance: 0.12 },
     { feature: 'Humidity (7d lag)', importance: -0.09 },
     { feature: 'Govt. Interventions', importance: -0.16 },
-];
-
-export const weatherData: WeatherData[] = [
-    { label: 'Temperature', value: '32°C', is_extreme: true },
-    { label: 'Humidity', value: '85%', is_extreme: true },
-    { label: 'Rainfall', value: '15mm' },
 ];
 
 export const genlandDistricts = [

@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { weatherData } from '@/lib/data';
-import { Thermometer, Droplets, CloudRain } from 'lucide-react';
+import { getLiveWeatherData } from '@/lib/weather';
+import { Thermometer, Droplets, CloudRain, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { WeatherData } from '@/lib/types';
 
 const iconMap = {
   Temperature: Thermometer,
@@ -9,7 +10,50 @@ const iconMap = {
   Rainfall: CloudRain,
 };
 
-export default function WeatherPanels() {
+async function fetchAndFormatWeatherData(): Promise<WeatherData[]> {
+    try {
+        const liveWeather = await getLiveWeatherData('Dhaka', 'BD');
+        if (!liveWeather) return [];
+
+        const { temp, humidity, rainfall } = liveWeather;
+        
+        const weatherData: WeatherData[] = [
+            { 
+                label: 'Temperature', 
+                value: `${temp.toFixed(1)}°C`, 
+                is_extreme: temp > 35 
+            },
+            { 
+                label: 'Humidity', 
+                value: `${humidity}%`, 
+                is_extreme: humidity > 90 
+            },
+            { 
+                label: 'Rainfall', 
+                value: `${rainfall}mm`,
+                is_extreme: rainfall > 20 // threshold for heavy rainfall in an hour
+            },
+        ];
+        return weatherData;
+    } catch (error) {
+        console.error("Failed to fetch weather data:", error);
+        return [];
+    }
+}
+
+export default async function WeatherPanels() {
+  const weatherData = await fetchAndFormatWeatherData();
+
+  if (!weatherData || weatherData.length === 0) {
+    return (
+        <Card className="flex flex-col items-center justify-center p-4 sm:col-span-3">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+            <p className="mt-2 text-sm font-medium text-destructive">Could not load weather data.</p>
+            <p className="text-xs text-muted-foreground">Please check API key or network.</p>
+        </Card>
+    );
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       {weatherData.map((item) => {

@@ -18,7 +18,7 @@ export function LocationFilter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedDivision = searchParams.get('division') || 'genland-dhaka';
+  const selectedDivision = searchParams.get('division') || 'dhaka-div';
   const selectedDistrict = searchParams.get('district');
 
   const divisions = React.useMemo(() => locations.filter((l) => l.level === 'division'), []);

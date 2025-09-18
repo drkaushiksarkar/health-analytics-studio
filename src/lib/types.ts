@@ -36,3 +36,9 @@ export type WeatherData = {
   value: string;
   is_extreme?: boolean;
 };
+
+export type LiveWeatherData = {
+  temp: number;
+  humidity: number;
+  rainfall: number;
+};

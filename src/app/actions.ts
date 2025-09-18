@@ -2,7 +2,7 @@
 
 import { generateReport } from '@/ai/flows/generate-report-from-prompt';
 import { answerQuestion } from '@/ai/flows/data-qa';
-import { riskData, featureImportanceData, weatherData, genlandDistricts } from '@/lib/data';
+import { riskData, featureImportanceData, genlandDistricts } from '@/lib/data';
 
 export async function downloadReportAction(prompt: string) {
   try {
@@ -42,10 +42,17 @@ export async function searchAction(question: string) {
         - Disease Incidence Map: A map of 'Genland' with districts. Each district has a name and an 'incidence' rate (0.0 to 1.0).
         - Time Series Data: Not directly available for search, but provides historical and predicted case counts.`;
 
+        // Since weatherData is now fetched live on the client, we'll create a representative sample for the AI's context.
+        const weatherDataSample = [
+            { label: 'Temperature', value: '30.5°C' },
+            { label: 'Humidity', value: '88%' },
+            { label: 'Rainfall', value: '5mm' },
+        ];
+
         const dataSample = JSON.stringify({
             riskData,
             featureImportanceData,
-            weatherData,
+            weatherData: weatherDataSample,
             genlandDistricts
         }, null, 2);
 

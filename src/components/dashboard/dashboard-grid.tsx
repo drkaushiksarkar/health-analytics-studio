@@ -15,7 +15,7 @@ import RiskHeatmap from './risk-heatmap';
 
 export default function DashboardGrid() {
   const searchParams = useSearchParams();
-  const location = searchParams.get('district') || 'dhaka-north';
+  const location = searchParams.get('district') || 'dhaka-dist';
   const disease = searchParams.get('disease') || 'dengue';
 
   // In a real app, you would fetch data based on filters
