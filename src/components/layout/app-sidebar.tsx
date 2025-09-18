@@ -7,7 +7,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-import { Virus } from 'lucide-react';
+import { Biohazard } from 'lucide-react';
 import { LocationFilter } from '../filters/location-filter';
 import { DiseaseFilter } from '../filters/disease-filter';
 import { DateRangeFilter } from '../filters/date-range-filter';
@@ -18,7 +18,7 @@ export default function AppSidebar() {
     <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Virus className="size-8 text-primary" />
+          <Biohazard className="size-8 text-primary" />
           <span className="font-headline text-2xl font-semibold">
             DiseaseVision
           </span>
