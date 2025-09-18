@@ -4,6 +4,7 @@ import type {
   Location,
   RiskData,
   TimeSeriesDataPoint,
+  WeatherData,
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 
@@ -68,4 +69,10 @@ export const genlandDistricts = [
     { id: 'd4', name: 'Delta', incidence: 0.9, path: "M120,130 L180,140 L250,150 L150,200 Z" },
     { id: 'd5', name: 'Epsilon', incidence: 0.1, path: "M40,50 L120,130 L60,180 Z" },
     { id: 'd6', name: 'Zeta', incidence: 0.6, path: "M220,80 L280,70 L320,130 L250,150 Z" },
+];
+
+export const weatherData: WeatherData[] = [
+  { label: 'Temperature', value: '30.5°C' },
+  { label: 'Humidity', value: '88%' },
+  { label: 'Rainfall', value: '5mm' },
 ];
