@@ -7,7 +7,6 @@ import type {
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 import { locations } from '@/lib/locations';
-import { districtGeometries } from './district-geometries';
 
 export { locations };
 
@@ -54,34 +53,6 @@ export const featureImportanceData: FeatureImportance[] = [
     { feature: 'Humidity (7d lag)', importance: -0.09 },
     { feature: 'Govt. Interventions', importance: -0.16 },
 ];
-
-export const bangladeshDistricts = districtGeometries.features.map(feature => {
-    const districtName = feature.properties.ADM2_EN;
-    const geometry = feature.geometry;
-    
-    // Create a random incidence value for demonstration purposes
-    const incidence = Math.random();
-
-    let path = '';
-    if (geometry.type === 'MultiPolygon') {
-        path = geometry.coordinates.map(polygon => 
-            polygon.map(ring => 
-                ring.map((point, i) => `${i === 0 ? 'M' : 'L'}${point[0]},${point[1]}`).join(' ')
-            ).join(' ')
-        ).join(' Z ');
-    } else if (geometry.type === 'Polygon') {
-        path = geometry.coordinates.map(ring => 
-            ring.map((point, i) => `${i === 0 ? 'M' : 'L'}${point[0]},${point[1]}`).join(' ')
-        ).join(' Z ');
-    }
-    
-    return {
-      id: districtName.toLowerCase().replace(/\s+/g, '-'),
-      name: districtName,
-      incidence: incidence,
-      path: path
-    };
-});
 
 // Note: genlandDistricts is now deprecated and will be removed in a future update.
 // For now, we will keep it for any components that might still reference it.
