@@ -1,0 +1,38 @@
+export type Location = {
+  id: string;
+  name: string;
+  level: 'country' | 'division' | 'district' | 'upazila' | 'union';
+  parent_id?: string;
+};
+
+export type Disease = {
+  id: string;
+  name: string;
+};
+
+export type TimeSeriesDataPoint = {
+  date: string;
+  actual: number;
+  predicted: number;
+  uncertainty?: [number, number]; // [low, high]
+  is_outbreak?: boolean;
+};
+
+export type RiskData = {
+  id: string;
+  location: string;
+  risk_score: number;
+  change: number;
+  risk_category: 'Low' | 'Medium' | 'High';
+};
+
+export type FeatureImportance = {
+  feature: string;
+  importance: number;
+};
+
+export type WeatherData = {
+  label: 'Temperature' | 'Humidity' | 'Rainfall';
+  value: string;
+  is_extreme?: boolean;
+};
