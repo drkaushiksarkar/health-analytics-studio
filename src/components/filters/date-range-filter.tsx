@@ -21,7 +21,7 @@ export function DateRangeFilter({ className }: React.HTMLAttributes<HTMLDivEleme
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const getDateRange = (): DateRange | undefined => {
+  const getInitialDateRange = (): DateRange | undefined => {
     const fromParam = searchParams.get('from');
     const toParam = searchParams.get('to');
     if (fromParam && toParam) {
@@ -31,10 +31,30 @@ export function DateRangeFilter({ className }: React.HTMLAttributes<HTMLDivEleme
         return { from: fromDate, to: toDate };
       }
     }
-    return { from: addDays(new Date(), -29), to: new Date() };
+    // Return undefined initially on the client to avoid hydration mismatch
+    return undefined;
   };
 
-  const [date, setDate] = React.useState<DateRange | undefined>(getDateRange);
+  const [date, setDate] = React.useState<DateRange | undefined>(getInitialDateRange);
+
+  React.useEffect(() => {
+    // This effect runs only on the client after hydration
+    if (date === undefined) {
+       const fromParam = searchParams.get('from');
+       const toParam = searchParams.get('to');
+       if (fromParam && toParam) {
+           const fromDate = parse(fromParam, 'yyyy-MM-dd', new Date());
+           const toDate = parse(toParam, 'yyyy-MM-dd', new Date());
+            if (isValid(fromDate) && isValid(toDate)) {
+                setDate({ from: fromDate, to: toDate });
+            }
+       } else {
+        // Set default date range on the client if no params are present
+        setDate({ from: addDays(new Date(), -29), to: new Date() });
+       }
+    }
+  }, [searchParams, date]);
+
 
   const handleDateChange = (newDate: DateRange | undefined) => {
     setDate(newDate);
@@ -51,10 +71,6 @@ export function DateRangeFilter({ className }: React.HTMLAttributes<HTMLDivEleme
     }
     router.push(`${pathname}?${params.toString()}`);
   };
-
-  React.useEffect(() => {
-    setDate(getDateRange());
-  }, [searchParams]);
 
   return (
     <div className={cn('grid gap-2', className)}>
