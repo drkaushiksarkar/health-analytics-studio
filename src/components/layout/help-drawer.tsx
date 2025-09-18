@@ -206,8 +206,38 @@ export default function HelpDrawer() {
                       <h6>Step 1: Install Dependencies</h6>
                       <p>Open a terminal in the project's root directory. If this is the first time building or if dependencies have changed, run:</p>
                       <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>npm install</code></pre>
-                      <p>This command reads the <code>package.json</code> and <code>package-lock.json</code> files and downloads the exact versions of all required libraries (like React, Next.js, and Tailwind CSS) into the <code>node_modules</code> directory.</p>
+                      <p>This command reads the <code>package.json</code> and <code>package-lock.json</code> files and downloads the exact versions of all required libraries into the <code>node_modules</code> directory.</p>
                       
+                      <h6>Key Dependencies Overview</h6>
+                      <p>This command installs all the necessary libraries defined in <code>package.json</code>. Here is a brief overview of the core technologies used in this application:</p>
+                      <ul className="list-disc pl-5">
+                        <li><strong>Core Framework:</strong>
+                            <ul>
+                                <li><strong>Next.js (<code>next</code>):</strong> A React framework for building production-grade web applications with features like server-side rendering and static site generation.</li>
+                                <li><strong>React (<code>react</code>, <code>react-dom</code>):</strong> A JavaScript library for building user interfaces with a component-based architecture.</li>
+                                <li><strong>TypeScript (<code>typescript</code>):</strong> A superset of JavaScript that adds static types, improving code quality and developer experience.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Generative AI:</strong>
+                            <ul>
+                                <li><strong>Genkit (<code>genkit</code>, <code>@genkit-ai/googleai</code>):</strong> A framework for building robust, production-ready AI-powered features. It orchestrates calls to large language models (LLMs).</li>
+                                <li><strong>Zod (<code>zod</code>):</strong> A TypeScript-first schema declaration and validation library, used here to define the input and output structures for AI flows.</li>
+                            </ul>
+                        </li>
+                        <li><strong>UI & Styling:</strong>
+                            <ul>
+                                <li><strong>Tailwind CSS (<code>tailwindcss</code>):</strong> A utility-first CSS framework for rapidly building custom designs without writing traditional CSS.</li>
+                                <li><strong>shadcn/ui (<code>@radix-ui/*</code>, <code>lucide-react</code>, etc.):</strong> A collection of beautifully designed, accessible, and reusable components built on top of Radix UI and Tailwind CSS.</li>
+                                <li><strong>Recharts (<code>recharts</code>):</strong> A composable charting library built on React components, used for all the data visualizations on the dashboard.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Utilities:</strong>
+                             <ul>
+                                <li><strong>Date FNS (<code>date-fns</code>):</strong> A modern JavaScript date utility library used for formatting and manipulating dates in the filters and charts.</li>
+                            </ul>
+                        </li>
+                      </ul>
+
                       <h6>Step 2: Run the Production Build Command</h6>
                       <p>Execute the build script defined in <code>package.json</code>:</p>
                       <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>npm run build</code></pre>
