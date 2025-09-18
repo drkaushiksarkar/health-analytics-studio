@@ -8,7 +8,6 @@ import {
   riskData,
   featureImportanceData,
 } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import FeatureImportanceChart from './feature-importance-chart';
 import ChoroplethMap from './choropleth-map';
 import RiskHeatmap from './risk-heatmap';
@@ -16,10 +15,10 @@ import { getLiveWeatherData } from '@/lib/weather';
 import type { WeatherData } from '@/lib/types';
 import React from 'react';
 
-async function fetchAndFormatWeatherData(): Promise<WeatherData[]> {
+async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
     try {
         const liveWeather = await getLiveWeatherData('Dhaka', 'BD');
-        if (!liveWeather) return [];
+        if (!liveWeather) return { data: [], error: true };
 
         const { temp, humidity, rainfall } = liveWeather;
         
@@ -40,10 +39,10 @@ async function fetchAndFormatWeatherData(): Promise<WeatherData[]> {
                 is_extreme: rainfall > 20 // threshold for heavy rainfall in an hour
             },
         ];
-        return weatherData;
+        return { data: weatherData, error: false };
     } catch (error) {
         console.error("Failed to fetch weather data:", error);
-        return [];
+        return { data: [], error: true };
     }
 }
 
@@ -58,16 +57,9 @@ export default function DashboardGrid() {
 
   React.useEffect(() => {
     async function loadWeather() {
-      try {
-        const data = await fetchAndFormatWeatherData();
-        if (data.length === 0) {
-          setWeatherError(true);
-        }
-        setWeatherData(data);
-      } catch (e) {
-        setWeatherError(true);
-        console.error(e);
-      }
+      const { data, error } = await fetchAndFormatWeatherData();
+      setWeatherData(data);
+      setWeatherError(error);
     }
     loadWeather();
   }, []);
