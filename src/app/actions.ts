@@ -2,7 +2,7 @@
 
 import { generateReport } from '@/ai/flows/generate-report-from-prompt';
 import { answerQuestion } from '@/ai/flows/data-qa';
-import { riskData, featureImportanceData, weatherData, genlandDistricts } from '@/lib/data';
+import { riskData, featureImportanceData, genlandDistricts, locations } from '@/lib/data';
 
 export async function downloadReportAction(prompt: string) {
   try {
@@ -35,18 +35,27 @@ export async function searchAction(question: string) {
     }
 
     try {
+        const weatherDataSample = [
+            { label: 'Temperature', value: '32.1°C', is_extreme: false },
+            { label: 'Humidity', value: '78%', is_extreme: false },
+            { label: 'Rainfall', value: '2mm', is_extreme: false },
+        ];
+        const upazilas = locations.filter(l => l.level === 'upazila').slice(0, 10);
+
         const dataDescription = `The dashboard contains the following data sources:
-        - Risk Heatmap Data: Contains non-spatial risk scores for specific locations. Includes 'location', 'risk_category' ('High', 'Medium', 'Low'), 'risk_score' (0-100), and 'change' (weekly score change).
+        - Risk Heatmap Data: Contains non-spatial risk scores for specific locations (upazilas/unions). Includes 'location', 'risk_category' ('High', 'Medium', 'Low'), 'risk_score' (0-100), and 'change' (weekly score change).
         - Feature Importance Data: Shows the drivers of the prediction model. Includes 'feature' (e.g., 'Rainfall (14d lag)') and 'importance' (a positive or negative score).
         - Weather Data: Current weather panels. Includes 'Temperature', 'Humidity', and 'Rainfall' with their values.
-        - Disease Incidence Map: A map of 'Genland' with districts. Each district has a name and an 'incidence' rate (0.0 to 1.0).
+        - Disease Incidence Map: A fictional map of 'Genland' with districts. Each district has a name and an 'incidence' rate (0.0 to 1.0).
+        - Location Data: Hierarchical location data for Bangladesh, including divisions, districts, and upazilas.
         - Time Series Data: Not directly available for search, but provides historical and predicted case counts.`;
 
         const dataSample = JSON.stringify({
             riskData,
             featureImportanceData,
-            weatherData,
-            genlandDistricts
+            weatherData: weatherDataSample,
+            genlandDistricts,
+            upazilas
         }, null, 2);
 
         const result = await answerQuestion({

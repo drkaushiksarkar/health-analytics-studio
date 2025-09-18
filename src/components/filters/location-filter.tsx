@@ -18,13 +18,18 @@ export function LocationFilter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedDivision = searchParams.get('division') || 'dhaka-div';
+  const selectedDivision = searchParams.get('division') || '6'; // Default to Dhaka
   const selectedDistrict = searchParams.get('district');
+  const selectedUpazila = searchParams.get('upazila');
 
   const divisions = React.useMemo(() => locations.filter((l) => l.level === 'division'), []);
   const districts = React.useMemo(
-    () => locations.filter((l) => l.parent_id === selectedDivision),
+    () => locations.filter((l) => l.parent_id === selectedDivision && l.level === 'district'),
     [selectedDivision]
+  );
+  const upazilas = React.useMemo(
+    () => locations.filter((l) => l.parent_id === selectedDistrict && l.level === 'upazila'),
+    [selectedDistrict]
   );
 
   const handleFilterChange = (key: string, value: string | null) => {
@@ -37,6 +42,10 @@ export function LocationFilter() {
 
     if (key === 'division') {
       params.delete('district');
+      params.delete('upazila');
+    }
+    if (key === 'district') {
+      params.delete('upazila');
     }
 
     router.push(`${pathname}?${params.toString()}`);
@@ -73,6 +82,23 @@ export function LocationFilter() {
               {districts.map((district: Location) => (
                 <SelectItem key={district.id} value={district.id}>
                   {district.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {upazilas.length > 0 && selectedDistrict && (
+          <Select
+            value={selectedUpazila ?? ''}
+            onValueChange={(value) => handleFilterChange('upazila', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Upazila" />
+            </SelectTrigger>
+            <SelectContent>
+              {upazilas.map((upazila: Location) => (
+                <SelectItem key={upazila.id} value={upazila.id}>
+                  {upazila.name}
                 </SelectItem>
               ))}
             </SelectContent>

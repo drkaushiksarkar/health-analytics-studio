@@ -1,27 +1,19 @@
 import type {
   Disease,
   FeatureImportance,
-  Location,
   RiskData,
   TimeSeriesDataPoint,
   WeatherData,
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
+import { locations } from '@/lib/locations';
+
+export { locations };
 
 export const diseases: Disease[] = [
   { id: 'dengue', name: 'Dengue' },
   { id: 'influenza', name: 'Influenza' },
   { id: 'malaria', name: 'Malaria' },
-];
-
-export const locations: Location[] = [
-  { id: 'bangladesh', name: 'Bangladesh', level: 'country' },
-  { id: 'dhaka-div', name: 'Dhaka Division', level: 'division', parent_id: 'bangladesh' },
-  { id: 'chattogram-div', name: 'Chattogram Division', level: 'division', parent_id: 'bangladesh' },
-  { id: 'dhaka-dist', name: 'Dhaka', level: 'district', parent_id: 'dhaka-div' },
-  { id: 'gazipur-dist', name: 'Gazipur', level: 'district', parent_id: 'dhaka-div' },
-  { id: 'chattogram-dist', name: 'Chattogram', level: 'district', parent_id: 'chattogram-div' },
-  { id: 'coxs-bazar-dist', name: 'Cox\'s Bazar', level: 'district', parent_id: 'chattogram-div' },
 ];
 
 export const generateTimeSeriesData = (days = 30): TimeSeriesDataPoint[] => {
