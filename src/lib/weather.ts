@@ -12,7 +12,7 @@ const OPENWEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
  * @returns An object with temperature, humidity, and rainfall, or null if an error occurs.
  */
 export async function getLiveWeatherData(city: string, countryCode: string): Promise<LiveWeatherData | null> {
-  const apiKey = process.env.OPENWEATHER_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
   if (!apiKey) {
     console.error('OpenWeather API key is not configured.');
