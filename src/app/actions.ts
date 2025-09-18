@@ -1,6 +1,8 @@
 "use server";
 
 import { generateReport } from '@/ai/flows/generate-report-from-prompt';
+import { answerQuestion } from '@/ai/flows/data-qa';
+import { riskData, featureImportanceData, weatherData, genlandDistricts } from '@/lib/data';
 
 export async function downloadReportAction(prompt: string) {
   try {
@@ -25,4 +27,37 @@ export async function downloadReportAction(prompt: string) {
     console.error("Error generating report:", error);
     return { success: false, error: (error as Error).message || "An unexpected error occurred." };
   }
+}
+
+export async function searchAction(question: string) {
+    if (!question) {
+        return { success: false, error: "Please provide a question." };
+    }
+
+    try {
+        const dataDescription = `The dashboard contains the following data sources:
+        - Risk Heatmap Data: Contains non-spatial risk scores for specific locations. Includes 'location', 'risk_category' ('High', 'Medium', 'Low'), 'risk_score' (0-100), and 'change' (weekly score change).
+        - Feature Importance Data: Shows the drivers of the prediction model. Includes 'feature' (e.g., 'Rainfall (14d lag)') and 'importance' (a positive or negative score).
+        - Weather Data: Current weather panels. Includes 'Temperature', 'Humidity', and 'Rainfall' with their values.
+        - Disease Incidence Map: A map of 'Genland' with districts. Each district has a name and an 'incidence' rate (0.0 to 1.0).
+        - Time Series Data: Not directly available for search, but provides historical and predicted case counts.`;
+
+        const dataSample = JSON.stringify({
+            riskData,
+            featureImportanceData,
+            weatherData,
+            genlandDistricts
+        }, null, 2);
+
+        const result = await answerQuestion({
+            question,
+            dataDescription,
+            dataSample
+        });
+
+        return { success: true, data: result };
+    } catch (error) {
+        console.error("Error in search action:", error);
+        return { success: false, error: (error as Error).message || "An unexpected error occurred during search." };
+    }
 }

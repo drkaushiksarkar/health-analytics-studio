@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { HelpCircle, FileText, BarChart2, Map, Users, Settings, Database, Filter, Download, MousePointerClick, AreaChart, MapPin, Folder, Server } from 'lucide-react';
+import { HelpCircle, FileText, BarChart2, Map, Users, Settings, Database, Filter, Download, MousePointerClick, AreaChart, MapPin, Folder, Server, Search, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -82,8 +82,42 @@ export default function HelpDrawer() {
 
                   <AccordionItem value="item-2">
                     <AccordionTrigger>
+                      <Search className="mr-2" />
+                       Step 2: Using the AI Search
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <p>
+                        The search bar in the header is a powerful AI assistant. You can ask it questions in natural language to get quick insights from the dashboard data.
+                      </p>
+                      <ol className="list-decimal pl-5">
+                          <li>
+                            <strong>Ask a Question:</strong>
+                            <ul className="list-disc pl-5">
+                                <li>Click on the search bar at the top of the page.</li>
+                                <li>Type your question. For example, you could ask:
+                                    <ul>
+                                        <li><em>"Which location has the highest risk score?"</em></li>
+                                        <li><em>"What are the top 3 most important features for predictions?"</em></li>
+                                        <li><em>"What is the incidence rate in Alpha district?"</em></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                          </li>
+                          <li>
+                            <strong>Get an Answer:</strong>
+                             <ul className="list-disc pl-5">
+                                <li>Press Enter. A dialog box will appear while the AI analyzes the data.</li>
+                                <li>The AI will provide a direct, text-based answer to your question based on the currently displayed data (Risk Heatmap, Feature Importance, etc.).</li>
+                            </ul>
+                          </li>
+                      </ol>
+                    </AccordionContent>
+                  </AccordionItem>
+                  
+                  <AccordionItem value="item-3">
+                    <AccordionTrigger>
                       <BarChart2 className="mr-2" />
-                      Step 2: Interpreting the Visualizations
+                      Step 3: Interpreting the Visualizations
                     </AccordionTrigger>
                     <AccordionContent>
                        <p>The main grid consists of several interactive cards. Here’s how to read them:</p>
@@ -125,10 +159,10 @@ export default function HelpDrawer() {
                         </ol>
                     </AccordionContent>
                   </AccordionItem>
-                    <AccordionItem value="item-3">
+                    <AccordionItem value="item-4">
                     <AccordionTrigger>
                       <Download className="mr-2" />
-                      Step 3: Generating a Report
+                      Step 4: Generating a Report
                     </AccordionTrigger>
                     <AccordionContent>
                       <p>
@@ -162,7 +196,7 @@ export default function HelpDrawer() {
                         <h5>Project Structure Overview</h5>
                         <p>This is a <a href="https://nextjs.org/" target="_blank" rel="noopener noreferrer">Next.js</a> application built with the App Router, <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">React</a>, and <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener noreferrer">TypeScript</a>. Styling is handled by <a href="https://tailwindcss.com/" target="_blank" rel="noopener noreferrer">Tailwind CSS</a> and <a href="https://ui.shadcn.com/" target="_blank" rel="noopener noreferrer">shadcn/ui</a> components. The backend AI capabilities are powered by <a href="https://firebase.google.com/docs/genkit" target="_blank" rel="noopener noreferrer">Genkit</a>.</p>
                          <ul className="list-disc pl-5">
-                            <li><strong><code>src/app/</code></strong>: Core application routing and pages. <code>page.tsx</code> is the main entry point for the dashboard UI. <code>layout.tsx</code> is the root layout.</li>
+                            <li><strong><code>src/app/</code></strong>: Core application routing and pages. <code>page.tsx</code> is the main entry point for the dashboard UI. <code>layout.tsx</code> is the root layout. <code>actions.ts</code> contains Server Actions for interacting with the backend.</li>
                             <li><strong><code>src/components/</code></strong>: Contains all React components.
                                 <ul className="list-disc pl-5">
                                     <li><code>dashboard/</code>: High-level widgets for the dashboard grid (e.g., <code>TimeSeriesChart</code>, <code>ChoroplethMap</code>).</li>
@@ -181,13 +215,23 @@ export default function HelpDrawer() {
                             <li><strong><code>src/ai/</code></strong>: Contains all Genkit-related code for generative AI features.
                                 <ul className="list-disc pl-5">
                                     <li><code>genkit.ts</code>: Initializes and configures the core Genkit AI instance.</li>
-                                    <li><code>flows/</code>: Defines the multi-step AI workflows, such as <code>generate-report-from-prompt.ts</code>, which orchestrates the LLM call for report generation.</li>
+                                    <li><code>flows/</code>: Defines the multi-step AI workflows. <code>generate-report-from-prompt.ts</code> orchestrates the LLM call for report generation. <code>data-qa.ts</code> powers the natural language search.</li>
                                 </ul>
                             </li>
                             <li><strong><code>public/</code></strong>: Static assets, which are publicly accessible.</li>
                              <li><strong><code>next.config.ts</code></strong>: Configuration file for the Next.js application.</li>
                              <li><strong><code>package.json</code></strong>: Defines project dependencies and scripts.</li>
                         </ul>
+                        
+                        <h5><Bot className="inline-block h-4 w-4 mr-1" />AI Search Feature Architecture</h5>
+                        <p>The AI-powered search is implemented using a combination of a React client component, a Next.js Server Action, and a Genkit flow.</p>
+                        <ol className="list-decimal pl-5">
+                           <li><strong>Client Component (<code>src/components/layout/header.tsx</code>):</strong> The search input in the header captures the user's question. On submission, it calls a Server Action.</li>
+                           <li><strong>Server Action (<code>src/app/actions.ts</code>):</strong> The <code>searchAction</code> function receives the question. It compiles a "context" string containing a description and a JSON sample of the dashboard's mock data.</li>
+                           <li><strong>Genkit Flow (<code>src/ai/flows/data-qa.ts</code>):</strong> The Server Action passes the question and the data context to the <code>answerQuestion</code> flow. This Genkit flow uses a prompt to instruct the language model to act as a data analyst and answer the question based on the provided context.</li>
+                           <li><strong>Response:</strong> The answer is passed back through the Server Action to the client, where it is displayed in a dialog box. This architecture ensures that all Genkit code and API keys remain securely on the server.</li>
+                        </ol>
+
                     </AccordionContent>
                   </AccordionItem>
 
@@ -268,7 +312,7 @@ export default function HelpDrawer() {
                        <ol className="list-decimal pl-5">
                            <li>Install a recent LTS version of Node.js (e.g., 20.x or later) on your server.</li>
                            <li>You will also need a process manager like <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener noreferrer">PM2</a> to keep the application running continuously and manage logs. Install it globally: <code>npm install -g pm2</code>.</li>
-                           <li>Set up environment variables. Create a <code>.env.local</code> file in the root of your project directory on the server. This is where you'll put secrets like your <code>GEMINI_API_KEY</code> and database connection string. This file is git-ignored and should never be committed to source control.</li>
+                           <li>Set up environment variables. Create a <code>.env.local</code> file in the root of your project directory on the server. This is where you'll put secrets like your <code>GEMINI_API_KEY</code>. This file is git-ignored and should never be committed to source control.</li>
                        </ol>
 
                       <h5>Step 2.3: Deploy and Run the Application</h5>
