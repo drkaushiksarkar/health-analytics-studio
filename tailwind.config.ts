@@ -94,21 +94,21 @@ export default {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
-      typography: (theme: any) => ({
+      typography: {
         DEFAULT: {
-            css: {
-                h1: {
-                    fontFamily: theme('fontFamily.headline'),
-                },
-                h2: {
-                    fontFamily: theme('fontFamily.headline'),
-                },
-                h3: {
-                    fontFamily: theme('fontFamily.headline'),
-                },
+          css: {
+            h1: {
+              fontFamily: '"Space Grotesk"',
             },
+            h2: {
+              fontFamily: '"Space Grotesk"',
+            },
+            h3: {
+              fontFamily: '"Space Grotesk"',
+            },
+          },
         },
-      }),
+      },
     },
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
