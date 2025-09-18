@@ -33,7 +33,7 @@ export default function HelpDrawer() {
           <SheetTitle>Help & Developer Guide</SheetTitle>
         </SheetHeader>
         <div className="py-4">
-          <Tabs defaultValue="setup">
+          <Tabs defaultValue="developer">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="setup">User Guide</TabsTrigger>
               <TabsTrigger value="developer">Developer Guide</TabsTrigger>
@@ -268,7 +268,7 @@ export default function HelpDrawer() {
                        <ol className="list-decimal pl-5">
                            <li>Install a recent LTS version of Node.js (e.g., 20.x or later) on your server.</li>
                            <li>You will also need a process manager like <a href="https://pm2.keymetrics.io/" target="_blank" rel="noopener noreferrer">PM2</a> to keep the application running continuously and manage logs. Install it globally: <code>npm install -g pm2</code>.</li>
-                           <li>Set up environment variables. Create a <code>.env.local</code> file in the root of your project directory on the server. This is where you'll put secrets like your <code>GEMINI_API_KEY</code>. This file is git-ignored and should never be committed to source control.</li>
+                           <li>Set up environment variables. Create a <code>.env.local</code> file in the root of your project directory on the server. This is where you'll put secrets like your <code>GEMINI_API_KEY</code> and database connection string. This file is git-ignored and should never be committed to source control.</li>
                        </ol>
 
                       <h5>Step 2.3: Deploy and Run the Application</h5>
@@ -302,6 +302,121 @@ export default function HelpDrawer() {
                              </li>
                              <li>Enable the site and restart Nginx. Now, traffic to <code>your_domain.com</code> will be securely routed to your application.</li>
                          </ol>
+                    </AccordionContent>
+                  </AccordionItem>
+                   <AccordionItem value="item-3">
+                    <AccordionTrigger>
+                      <Database className="mr-2" />
+                      Phase 3: Connecting a Production Data Pipeline
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <h5>Overview</h5>
+                        <p>This application is currently powered by mock data located in <code>src/lib/data.ts</code>. To transition to a production environment, you will need to replace this static data with a live connection to a database. This guide outlines the steps to connect to a PostgreSQL database, but the principles apply to other SQL databases as well.</p>
+                        
+                        <h5>Step 3.1: Define the Database Schema</h5>
+                        <p>First, you need to create tables in your PostgreSQL database that mirror the data structures defined in <code>src/lib/types.ts</code>. Below are some example <code>CREATE TABLE</code> statements to get you started. You should adapt these to your specific needs, such as adding indexes for performance.</p>
+
+                        <h6>Locations Table</h6>
+                        <p>Stores the hierarchical location data used by the location filter.</p>
+                        <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`CREATE TABLE locations (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    level VARCHAR(20) NOT NULL,
+    parent_id VARCHAR(50) REFERENCES locations(id)
+);`}</code></pre>
+
+                        <h6>Diseases Table</h6>
+                        <p>Stores the list of diseases for the disease filter.</p>
+                        <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`CREATE TABLE diseases (
+    id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);`}</code></pre>
+
+                        <h6>Cases Data Table</h6>
+                        <p>This is the core table for time-series data, storing actual and predicted case counts for a specific disease and location on a given date.</p>
+                        <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`CREATE TABLE daily_cases (
+    record_date DATE NOT NULL,
+    location_id VARCHAR(50) NOT NULL REFERENCES locations(id),
+    disease_id VARCHAR(50) NOT NULL REFERENCES diseases(id),
+    actual_cases INT,
+    predicted_cases INT,
+    uncertainty_low INT,
+    uncertainty_high INT,
+    is_outbreak BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (record_date, location_id, disease_id)
+);`}</code></pre>
+
+                        <h6>Weather Data Table</h6>
+                        <p>Stores daily weather readings for different locations.</p>
+                        <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`CREATE TABLE weather_readings (
+    reading_date DATE NOT NULL,
+    location_id VARCHAR(50) NOT NULL REFERENCES locations(id),
+    temperature_celsius DECIMAL(5, 2),
+    humidity_percent DECIMAL(5, 2),
+    rainfall_mm DECIMAL(5, 2),
+    PRIMARY KEY (reading_date, location_id)
+);`}</code></pre>
+
+                        <h5>Step 3.2: Create a Data Service Layer</h5>
+                        <p>Instead of importing from <code>src/lib/data.ts</code>, you'll create a new set of functions to query your database. It's best practice to centralize your database logic.</p>
+                        
+                        <ol className="list-decimal pl-5">
+                          <li>Install a PostgreSQL client for Node.js, like <code>pg</code>: <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>npm install pg</code></pre></li>
+                          <li>Create a new file, e.g., <code>src/lib/db.ts</code>, to handle the database connection and queries.</li>
+                          <li>Add your database connection string to the <code>.env.local</code> file you created in Phase 2:
+                          <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>DATABASE_URL="postgresql://user:password@host:port/database"</code></pre>
+                          </li>
+                          <li>In <code>src/lib/db.ts</code>, you would write functions to fetch data. For example:
+                          <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`import { Pool } from 'pg';
+import type { TimeSeriesDataPoint } from './types';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export async function fetchTimeSeriesData(locationId: string, diseaseId: string, from: Date, to: Date): Promise<TimeSeriesDataPoint[]> {
+  const query = \`
+    SELECT 
+      to_char(record_date, 'YYYY-MM-DD') as date,
+      actual_cases as actual,
+      predicted_cases as predicted,
+      array[uncertainty_low, uncertainty_high] as uncertainty,
+      is_outbreak
+    FROM daily_cases
+    WHERE location_id = $1 AND disease_id = $2 AND record_date BETWEEN $3 AND $4
+    ORDER BY record_date ASC;
+  \`;
+  const res = await pool.query(query, [locationId, diseaseId, from, to]);
+  return res.rows;
+}
+// ... create similar functions for locations, diseases, etc.`}</code></pre>
+                          </li>
+                        </ol>
+
+                        <h5>Step 3.3: Update UI Components</h5>
+                        <p>Finally, update the components in <code>src/components/dashboard/</code> to use your new data fetching functions. Since the dashboard components are Server Components (or used within them), you can make them `async` and `await` the data directly.</p>
+                        
+                        <p>For example, in <code>src/components/dashboard/dashboard-grid.tsx</code>, you would replace the static data generation:</p>
+                        <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`// Before (in dashboard-grid.tsx)
+import { generateTimeSeriesData } from '@/lib/data';
+// ...
+const timeSeriesData = generateTimeSeriesData(60);
+return (
+  <TimeSeriesChart data={timeSeriesData} />
+);
+
+// After (in an async component)
+import { fetchTimeSeriesData } from '@/lib/db';
+// ...
+export default async function DashboardGrid() {
+  const searchParams = useSearchParams();
+  // ... get filters
+  const timeSeriesData = await fetchTimeSeriesData(location, disease, from, to);
+  return (
+    <TimeSeriesChart data={timeSeriesData} />
+  );
+}`}</code></pre>
+                        <p>You would apply the same pattern to the other components, replacing calls to `riskData`, `featureImportanceData`, etc., with asynchronous calls to your new data service functions in `src/lib/db.ts`.</p>
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
