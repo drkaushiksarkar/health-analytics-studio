@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { genlandDistricts } from '@/lib/data';
+import { bangladeshDistricts } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -21,7 +21,7 @@ const getRiskColor = (incidence: number) => {
 export default function ChoroplethMap() {
   const [selected, setSelected] = React.useState<string | null>(null);
 
-  const selectedDistrict = selected ? genlandDistricts.find(d => d.id === selected) : null;
+  const selectedDistrict = selected ? bangladeshDistricts.find(d => d.id === selected) : null;
 
   return (
     <Card>
@@ -36,16 +36,16 @@ export default function ChoroplethMap() {
       <CardContent>
         <TooltipProvider>
             <div className="relative aspect-[4/3] w-full">
-            <svg viewBox="0 0 400 220" className="h-full w-full">
-                <g>
-                {genlandDistricts.map((district) => (
+            <svg viewBox="88 21.5 8 6" className="h-full w-full">
+                <g transform="scale(1 -1) translate(0 -48)">
+                {bangladeshDistricts.map((district) => (
                     <Tooltip key={district.id}>
                     <TooltipTrigger asChild>
                         <path
                         d={district.path}
                         fill={getRiskColor(district.incidence)}
                         stroke="hsl(var(--card-foreground))"
-                        strokeWidth="0.5"
+                        strokeWidth="0.01"
                         onClick={() => setSelected(district.id)}
                         className={cn(
                             'cursor-pointer transition-all duration-300 hover:opacity-80',

@@ -7,6 +7,7 @@ import type {
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 import { locations } from '@/lib/locations';
+import { districtGeometries } from './district-geometries';
 
 export { locations };
 
@@ -54,6 +55,36 @@ export const featureImportanceData: FeatureImportance[] = [
     { feature: 'Govt. Interventions', importance: -0.16 },
 ];
 
+export const bangladeshDistricts = districtGeometries.features.map(feature => {
+    const districtName = feature.properties.ADM2_EN;
+    const geometry = feature.geometry;
+    
+    // Create a random incidence value for demonstration purposes
+    const incidence = Math.random();
+
+    let path = '';
+    if (geometry.type === 'MultiPolygon') {
+        path = geometry.coordinates.map(polygon => 
+            polygon.map(ring => 
+                ring.map((point, i) => `${i === 0 ? 'M' : 'L'}${point[0]},${point[1]}`).join(' ')
+            ).join(' ')
+        ).join(' Z ');
+    } else if (geometry.type === 'Polygon') {
+        path = geometry.coordinates.map(ring => 
+            ring.map((point, i) => `${i === 0 ? 'M' : 'L'}${point[0]},${point[1]}`).join(' ')
+        ).join(' Z ');
+    }
+    
+    return {
+      id: districtName.toLowerCase().replace(/\s+/g, '-'),
+      name: districtName,
+      incidence: incidence,
+      path: path
+    };
+});
+
+// Note: genlandDistricts is now deprecated and will be removed in a future update.
+// For now, we will keep it for any components that might still reference it.
 export const genlandDistricts = [
     { id: 'd1', name: 'Alpha', incidence: 0.8, path: "M40,50 L100,20 L160,70 L120,130 Z" },
     { id: 'd2', name: 'Beta', incidence: 0.5, path: "M100,20 L180,25 L220,80 L160,70 Z" },
@@ -63,8 +94,9 @@ export const genlandDistricts = [
     { id: 'd6', name: 'Zeta', incidence: 0.6, path: "M220,80 L280,70 L320,130 L250,150 Z" },
 ];
 
+
 export const weatherData: WeatherData[] = [
   { label: 'Temperature', value: '30.5°C' },
   { label: 'Humidity', value: '88%' },
-  { label: 'Rainfall', value: '5mm' },
+  { label: 'Rainfall', value: '0mm' },
 ];
