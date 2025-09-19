@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Biohazard, Map } from 'lucide-react';
+import { Biohazard, Map, LayoutDashboard } from 'lucide-react';
 import { LocationFilter } from '../filters/location-filter';
 import { DiseaseFilter } from '../filters/disease-filter';
 import { DateRangeFilter } from '../filters/date-range-filter';
@@ -41,12 +41,15 @@ export default function AppSidebar() {
             <SidebarGroupLabel>Views</SidebarGroupLabel>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <Link href="/" legacyBehavior passHref>
-                        <SidebarMenuButton tooltip="Dashboard">Dashboard</SidebarMenuButton>
+                    <Link href="/">
+                        <SidebarMenuButton tooltip="Dashboard">
+                            <LayoutDashboard />
+                            <span>Dashboard</span>
+                        </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                    <Link href="/maps/districts" legacyBehavior passHref>
+                    <Link href="/maps/districts">
                         <SidebarMenuButton tooltip="District Map">
                             <Map />
                             <span>Districts Map</span>
