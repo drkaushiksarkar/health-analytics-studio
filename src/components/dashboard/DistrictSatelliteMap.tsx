@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -142,15 +143,21 @@ export default function DistrictSatelliteMap({
   // Toggle basemap
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    map.setLayoutProperty('esri-raster', 'visibility', basemap === 'esri' ? 'visible' : 'none');
-    map.setLayoutProperty('osm-raster', 'visibility', basemap === 'osm' ? 'visible' : 'none');
+    if (!map || !map.isStyleLoaded()) return;
+
+    if (map.getLayer('esri-raster')) {
+        map.setLayoutProperty('esri-raster', 'visibility', basemap === 'esri' ? 'visible' : 'none');
+    }
+    if (map.getLayer('osm-raster')) {
+        map.setLayoutProperty('osm-raster', 'visibility', basemap === 'osm' ? 'visible' : 'none');
+    }
   }, [basemap]);
 
   // Toggle labels
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !map.isStyleLoaded()) return;
+    
     const vis = showLabels ? 'visible' : 'none';
     if (map.getLayer('district-labels-layer')) {
       map.setLayoutProperty('district-labels-layer', 'visibility', vis);
