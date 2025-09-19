@@ -24,7 +24,12 @@ export default function DistrictSatelliteMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: { version: 8, sources: {}, layers: [] },
+      style: {
+        version: 8,
+        sources: {},
+        layers: [],
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      },
       center: [90.4, 23.7],
       zoom: 5.5,
       attributionControl: false,
@@ -100,11 +105,13 @@ export default function DistrictSatelliteMap({
         source: 'district-labels',
         layout: {
           'text-field': ['get', 'ADM2_EN'],
+          'text-font': ['Noto Sans Regular'],
           'text-size': 11,
           'text-allow-overlap': false,
           'visibility': showLabelsDefault ? 'visible' : 'none'
         },
         paint: {
+          'text-color': '#FFFFFF',
           'text-halo-color': '#000',
           'text-halo-width': 1.2
         }
@@ -116,7 +123,7 @@ export default function DistrictSatelliteMap({
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties || {};
-        const html = `<div style="font-size:12px"><b>District:</b> ${p.ADM2_EN || ''}<br/><b>Division:</b> ${p.ADM1_EN || ''}</div>`;
+        const html = `<div style="font-size:12px; color: #000;"><b>District:</b> ${p.ADM2_EN || ''}<br/><b>Division:</b> ${p.ADM1_EN || ''}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
       });
