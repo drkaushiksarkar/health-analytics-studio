@@ -6,12 +6,16 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Biohazard } from 'lucide-react';
+import { Biohazard, Map } from 'lucide-react';
 import { LocationFilter } from '../filters/location-filter';
 import { DiseaseFilter } from '../filters/disease-filter';
 import { DateRangeFilter } from '../filters/date-range-filter';
 import { ReportDownloader } from '../dashboard/report-downloader';
+import Link from 'next/link';
 
 export default function AppSidebar() {
   return (
@@ -33,6 +37,24 @@ export default function AppSidebar() {
             <DateRangeFilter />
           </div>
         </SidebarGroup>
+         <SidebarGroup>
+            <SidebarGroupLabel>Views</SidebarGroupLabel>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <Link href="/" legacyBehavior passHref>
+                        <SidebarMenuButton tooltip="Dashboard">Dashboard</SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/maps/districts" legacyBehavior passHref>
+                        <SidebarMenuButton tooltip="District Map">
+                            <Map />
+                            <span>Districts Map</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarMenu>
+         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <ReportDownloader />
