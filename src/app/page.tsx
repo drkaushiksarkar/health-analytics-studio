@@ -19,6 +19,12 @@ export default function Home() {
           <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <DashboardGrid />
           </main>
+          <footer className="border-t bg-background px-4 py-2 sm:px-6">
+            <p className="text-center text-xs text-muted-foreground">
+              The EWARS system has been developed with funding support from The
+              Global Fund and TA provided by IMACS.
+            </p>
+          </footer>
         </SidebarInset>
       </div>
     </SidebarProvider>
