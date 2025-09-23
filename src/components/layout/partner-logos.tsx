@@ -1,14 +1,14 @@
 import Image from 'next/image';
 
 const logos = [
-  { src: '/logos/cdc.png', alt: 'CDC Logo' },
-  { src: '/logos/mis.png', alt: 'MIS Logo' },
-  { src: '/logos/iedcr.png', alt: 'IEDCR Logo' },
-  { src: '/logos/unops.png', alt: 'UNOPS Logo' },
-  { src: '/logos/brac.png', alt: 'BRAC Logo' },
-  { src: '/logos/moru.png', alt: 'MORU Logo' },
-  { src: '/logos/gm.png', alt: 'GM Logo' },
-  { src: '/logos/imacs.png', alt: 'IMACS Logo' },
+  { src: '/geo/logos/cdc.png', alt: 'CDC Logo' },
+  { src: '/geo/logos/mis.png', alt: 'MIS Logo' },
+  { src: '/geo/logos/iedcr.png', alt: 'IEDCR Logo' },
+  { src: '/geo/logos/unops.png', alt: 'UNOPS Logo' },
+  { src: '/geo/logos/brac.png', alt: 'BRAC Logo' },
+  { src: '/geo/logos/moru.png', alt: 'MORU Logo' },
+  { src: '/geo/logos/gm.png', alt: 'GM Logo' },
+  { src: '/geo/logos/imacs.png', alt: 'IMACS Logo' },
 ];
 
 export default function PartnerLogos() {
