@@ -8,9 +8,10 @@ import {
   riskData,
   featureImportanceData,
   locations,
+  getAggregatedPredictions,
 } from '@/lib/data';
 import FeatureImportanceChart from './feature-importance-chart';
-import ChoroplethMap from './choropleth-map';
+import DistrictSatelliteMap from './DistrictSatelliteMap';
 import RiskHeatmap from './risk-heatmap';
 import { getLiveWeatherData } from '@/lib/weather';
 import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
@@ -71,6 +72,8 @@ export default function DashboardGrid() {
     return getRealTimeSeriesData(districtName);
   }, [districtId]);
 
+  const predictionData = React.useMemo(() => getAggregatedPredictions(), []);
+
   return (
     <div className="grid flex-1 items-start gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-5">
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-3">
@@ -79,7 +82,11 @@ export default function DashboardGrid() {
             <TimeSeriesChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
         </div>
-        <ChoroplethMap />
+        <DistrictSatelliteMap 
+            height="550px" 
+            showLabelsDefault={true}
+            predictionData={predictionData}
+          />
       </div>
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-2">
         <RiskHeatmap data={riskData} />

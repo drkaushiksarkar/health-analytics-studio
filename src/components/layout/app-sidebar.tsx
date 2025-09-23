@@ -16,8 +16,10 @@ import { DiseaseFilter } from '../filters/disease-filter';
 import { DateRangeFilter } from '../filters/date-range-filter';
 import { ReportDownloader } from '../dashboard/report-downloader';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function AppSidebar() {
+  const pathname = usePathname();
   return (
     <>
       <SidebarHeader>
@@ -42,17 +44,9 @@ export default function AppSidebar() {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <Link href="/">
-                        <SidebarMenuButton tooltip="Dashboard">
+                        <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
                             <LayoutDashboard />
                             <span>Dashboard</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/maps/districts">
-                        <SidebarMenuButton tooltip="District Map">
-                            <Map />
-                            <span>Districts Map</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>
