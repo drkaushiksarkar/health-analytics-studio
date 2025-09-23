@@ -11,6 +11,7 @@ import {
   featureImportanceData,
   locations,
   getAggregatedDenguePredictions,
+  weatherDiseaseTriggers,
 } from '@/lib/data';
 import FeatureImportanceChart from './feature-importance-chart';
 import DistrictSatelliteMap from './DistrictSatelliteMap';
@@ -22,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import MalariaMap from './malaria-map';
 import DiarrhoeaMap from './DiarrhoeaMap';
 import PredictionUncertaintyChart from './PredictionUncertaintyChart';
+import WeatherDiseaseTriggers from './WeatherDiseaseTriggers';
 
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
@@ -102,6 +104,7 @@ export default function DashboardGrid() {
             <PredictedCasesTrendChart data={timeSeriesData} />
             <PredictionUncertaintyChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
+            <WeatherDiseaseTriggers data={weatherDiseaseTriggers} />
         </div>
          <div className="grid gap-4 sm:grid-cols-1">
             <Card>

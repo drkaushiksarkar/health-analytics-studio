@@ -43,3 +43,11 @@ export type LiveWeatherData = {
   humidity: number;
   rainfall: number;
 };
+
+export type WeatherDiseaseTrigger = {
+  id: number;
+  variable: string;
+  icon: 'Thermometer' | 'Droplets' | 'CloudRain';
+  diseases: string[];
+  impact: string;
+};

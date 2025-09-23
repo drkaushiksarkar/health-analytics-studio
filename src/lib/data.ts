@@ -4,6 +4,7 @@ import type {
   RiskData,
   TimeSeriesDataPoint,
   WeatherData,
+  WeatherDiseaseTrigger,
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 import { locations } from '@/lib/locations';
@@ -123,6 +124,30 @@ export const featureImportanceData: FeatureImportance[] = [
     { feature: 'Previous Cases (7d)', importance: 0.12 },
     { feature: 'Humidity (7d lag)', importance: -0.09 },
     { feature: 'Govt. Interventions', importance: -0.16 },
+];
+
+export const weatherDiseaseTriggers: WeatherDiseaseTrigger[] = [
+    {
+        id: 1,
+        variable: 'High Temperature',
+        icon: 'Thermometer',
+        diseases: ['Dengue', 'Diarrhoea'],
+        impact: 'Increases mosquito metabolic and reproductive rates; accelerates pathogen replication.'
+    },
+    {
+        id: 2,
+        variable: 'High Humidity',
+        icon: 'Droplets',
+        diseases: ['Dengue', 'Malaria'],
+        impact: 'Supports mosquito survival, activity, and lifespan, increasing opportunities for transmission.'
+    },
+    {
+        id: 3,
+        variable: 'Heavy Rainfall',
+        icon: 'CloudRain',
+        diseases: ['Dengue', 'Diarrhoea', 'Malaria'],
+        impact: 'Creates breeding sites for mosquitoes (Dengue, Malaria); can contaminate water sources (Diarrhoea).'
+    }
 ];
 
 // Note: genlandDistricts is now deprecated and will be removed in a future update.
