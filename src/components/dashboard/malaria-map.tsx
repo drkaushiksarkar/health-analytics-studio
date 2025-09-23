@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
 import Papa from 'papaparse';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const MapLegend = ({ title, stops, labels }: { title: string, stops: [number, string][], labels: string[] }) => (
   <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-w-xs">
@@ -22,23 +23,26 @@ const MapLegend = ({ title, stops, labels }: { title: string, stops: [number, st
   </div>
 );
 
+type MalariaSpecies = 'vivax' | 'falciparum' | 'mixed';
+
 export default function MalariaMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const [monthIndex, setMonthIndex] = useState(0);
   const [geojsonData, setGeojsonData] = useState<any>(null);
+  const [species, setSpecies] = useState<MalariaSpecies>('vivax');
 
   const colorStops: [number, string][] = useMemo(() => [
-    [-Infinity, '#2c7bb6'],     // Very low
-    [-8.70e-6, '#abd9e9'],      // Low
-    [-1.23e-6, '#ffffbf'],      // Slightly below baseline
-    [0, '#fee090'],             // Slightly above baseline
-    [4.40e-6, '#fdae61'],       // Elevated
-    [1.03e-4, '#f46d43'],       // High
-    [2.41e-4, '#d73027']        // Very high
+    [-Infinity, '#2c7bb6'],
+    [-8.70e-6, '#abd9e9'],
+    [-1.23e-6, '#ffffbf'],
+    [0, '#fee090'],
+    [4.40e-6, '#fdae61'],
+    [1.03e-4, '#f46d43'],
+    [2.41e-4, '#d73027']
   ], []);
 
-  const legendLabels = [
+  const legendLabels = useMemo(() => [
     'Very low (≤ -8.70e-06)',
     'Low (-8.70e-06 to -1.23e-06)',
     'Slightly below baseline (-1.23e-06 to 0)',
@@ -46,8 +50,7 @@ export default function MalariaMap() {
     'Elevated (4.40e-06 to 1.03e-04)',
     'High (1.03e-04 to 2.41e-04)',
     'Very high (≥ 2.41e-04)'
-  ];
-
+  ], []);
 
   const monthLabels = useMemo(() => [
     "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06",
@@ -59,7 +62,7 @@ export default function MalariaMap() {
       try {
         const [geojsonRes, csvRes] = await Promise.all([
           fetch('/geo/malaria.geojson'),
-          fetch('/geo/malaria_predictions.csv')
+          fetch('/geo/malaria_species_predictions.csv')
         ]);
 
         if (!geojsonRes.ok || !csvRes.ok) {
@@ -85,12 +88,11 @@ export default function MalariaMap() {
               const upazilaId = feature.properties.UpazilaID;
               const predictions = predictionsByUpazila[upazilaId];
               if (predictions) {
-                monthLabels.forEach((month, index) => {
-                  feature.properties[`rate_${index}`] = predictions[month] || 0;
-                });
-              } else {
-                 monthLabels.forEach((month, index) => {
-                  feature.properties[`rate_${index}`] = 0;
+                monthLabels.forEach((month) => {
+                    const monthStr = month.substring(5,7); // 01, 02...
+                    feature.properties[`rate_vivax_${monthStr}`] = predictions[`rate_vivax_${month}`] || 0;
+                    feature.properties[`rate_falciparum_${monthStr}`] = predictions[`rate_falciparum_${month}`] || 0;
+                    feature.properties[`rate_mixed_${monthStr}`] = predictions[`rate_mixed_${month}`] || 0;
                 });
               }
             });
@@ -106,11 +108,7 @@ export default function MalariaMap() {
   }, [monthLabels]);
 
   useEffect(() => {
-    if (!containerRef.current || !geojsonData) return;
-    
-    if (mapRef.current) { // If map already exists, just update source and layers
-        return;
-    }
+    if (mapRef.current || !containerRef.current || !geojsonData) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -139,13 +137,14 @@ export default function MalariaMap() {
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
 
-    map.on('load', async () => {
+    map.on('load', () => {
       map.addSource('malaria-data', {
         type: 'geojson',
         data: geojsonData
       });
-
-      const riskProperty = `rate_${monthIndex}`;
+      
+      const currentMonthLabel = monthLabels[monthIndex].substring(5,7);
+      const riskProperty = `rate_${species}_${currentMonthLabel}`;
 
       map.addLayer({
         id: 'malaria-fill',
@@ -155,7 +154,7 @@ export default function MalariaMap() {
           'fill-color': [
             'step',
             ['get', riskProperty],
-            colorStops[0][1], // Default color for values less than the first stop
+            colorStops[0][1],
             ...colorStops.slice(1).flat()
           ],
           'fill-opacity': 0.7,
@@ -175,33 +174,21 @@ export default function MalariaMap() {
       } catch (e) {
           console.error("Could not fit bounds", e);
       }
-
-      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
-      map.on('mousemove', 'malaria-fill', (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
-        const p = f.properties || {};
-        const rate = p[`rate_${monthIndex}`];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
-        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      
-      map.on('mouseleave', 'malaria-fill', () => {
-        popup.remove();
-        map.getCanvas().style.cursor = '';
-      });
     });
 
-    return () => map.remove();
-  }, [geojsonData, colorStops]);
+    return () => {
+        mapRef.current?.remove();
+        mapRef.current = null;
+    }
+  }, [geojsonData]);
 
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded() || !geojsonData) return;
-
-    const riskProperty = `rate_${monthIndex}`;
+    
+    const currentMonthLabel = monthLabels[monthIndex].substring(5,7);
+    const riskProperty = `rate_${species}_${currentMonthLabel}`;
 
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
@@ -210,9 +197,10 @@ export default function MalariaMap() {
         ...colorStops.slice(1).flat()
     ]);
     
-    // Update tooltip content on month change
+    map.off('mousemove', 'malaria-fill');
+    map.off('mouseleave', 'malaria-fill');
+    
     const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
-    map.off('mousemove', 'malaria-fill'); // Remove previous listener to avoid duplicates
     map.on('mousemove', 'malaria-fill', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
@@ -222,27 +210,43 @@ export default function MalariaMap() {
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
     });
+    
+    map.on('mouseleave', 'malaria-fill', () => {
+        popup.remove();
+        map.getCanvas().style.cursor = '';
+    });
 
-
-  }, [monthIndex, geojsonData, colorStops]);
-
+  }, [monthIndex, species, geojsonData, colorStops, monthLabels]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Malaria Geospatial Risk Map</CardTitle>
         <CardDescription>
-          Monthly simulated malaria risk by upazila. Current month: {monthLabels[monthIndex]}
+          Monthly simulated malaria risk by upazila.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="relative w-full">
-            <div className="absolute top-2 left-2 z-10">
+            <div className="absolute top-2 left-2 z-10 flex flex-col gap-2">
                 <MapLegend title="Malaria Risk Rate" stops={colorStops} labels={legendLabels} />
+                <div className="bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-md max-w-xs space-y-2">
+                    <Label htmlFor="species-select">Species</Label>
+                    <Select value={species} onValueChange={(value) => setSpecies(value as MalariaSpecies)}>
+                        <SelectTrigger id="species-select">
+                            <SelectValue placeholder="Select Species" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="vivax">Vivax</SelectItem>
+                            <SelectItem value="falciparum">Falciparum</SelectItem>
+                            <SelectItem value="mixed">Mixed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             <div ref={containerRef} style={{ height: '550px' }} className="rounded-lg overflow-hidden shadow" />
             <div className="grid gap-2 pt-4">
-                <Label htmlFor="month-slider">Month Selector</Label>
+                <Label htmlFor="month-slider">Month: {monthLabels[monthIndex]}</Label>
                 <div className="flex items-center gap-4">
                     <Slider
                         id="month-slider"
