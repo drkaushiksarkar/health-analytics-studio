@@ -16,7 +16,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
         <div key={i} className="flex items-center gap-2">
           <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
           <span className="text-xs">
-             {i === 0 ? `< ${stops[1][0].toFixed(1)}` : i === stops.length - 1 ? `≥ ${value.toFixed(1)}` : `${value.toFixed(1)} - ${stops[i + 1][0].toFixed(1)}`}
+             {i === 0 ? `< ${stops[1][0].toFixed(2)}` : i === stops.length - 1 ? `≥ ${value.toFixed(2)}` : `${value.toFixed(2)} - ${stops[i + 1][0].toFixed(2)}`}
           </span>
         </div>
       ))}
@@ -32,12 +32,12 @@ export default function MalariaMap() {
 
   const colorStops: [number, string][] = useMemo(() => [
     [0.0, '#feebe2'],
-    [0.1, '#fcc5c0'],
-    [0.2, '#fa9fb5'],
-    [0.4, '#f768a1'],
-    [0.6, '#dd3497'],
-    [0.8, '#ae017e'],
-    [1.0, '#7a0177'],
+    [0.05, '#fcc5c0'],
+    [0.1, '#fa9fb5'],
+    [0.15, '#f768a1'],
+    [0.2, '#dd3497'],
+    [0.3, '#ae017e'],
+    [0.4, '#7a0177'],
   ], []);
 
   const monthLabels = useMemo(() => [
@@ -99,8 +99,8 @@ export default function MalariaMap() {
   useEffect(() => {
     if (!containerRef.current || !geojsonData) return;
     
-    if (mapRef.current) {
-        mapRef.current.remove();
+    if (mapRef.current) { // If map already exists, just update source and layers
+        return;
     }
 
     const map = new maplibregl.Map({
@@ -172,8 +172,8 @@ export default function MalariaMap() {
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties || {};
-        const rate = p[riskProperty];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(2) : 'No data'}</div>`;
+        const rate = p[`rate_${monthIndex}`];
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(3) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -209,7 +209,7 @@ export default function MalariaMap() {
         if (!f) return;
         const p = f.properties || {};
         const rate = p[riskProperty];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(2) : 'No data'}</div>`;
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(3) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
     });
@@ -251,5 +251,3 @@ export default function MalariaMap() {
     </Card>
   );
 }
-
-    
