@@ -19,89 +19,51 @@ export const diseases: Disease[] = [
   { id: 'diarrhoea', name: 'Acute Watery Diarrhoea' },
 ];
 
-export const districtCodeMapping: { [key: string]: string } = {
-  "Bagerhat": "1",
-  "Barishal": "2",
-  "Bhola": "3",
-  "Bogura": "4",
-  "Chandpur": "5",
-  "Chattogram": "6",
-  "Chuadanga": "7",
-  "Cox's Bazar": "8",
-  "Cumilla": "9",
-  "Dhaka": "10",
-  "Dinajpur": "11",
-  "Faridpur": "12",
-  "Feni": "13",
-  "Jashore": "14",
-  "Khulna": "15",
-  "Madaripur": "16",
-  "Moulvibazar": "17",
-  "Mymensingh": "18",
-  "Nilphamari": "19",
-  "Noakhali": "20",
-  "Pabna": "21",
-  "Patuakhali": "22",
-  "Rajshahi": "23",
-  "Rangamati": "24",
-  "Rangpur": "25",
-  "Satkhira": "26",
-  "Sylhet": "27",
-  "Tangail": "28",
-};
-
-// A reverse mapping to get district name from code
-const districtNameMapping = Object.fromEntries(
-    Object.entries(districtCodeMapping).map(([name, code]) => [code, name])
-);
-
-const diarrhoeaDistrictMapping: { [key: string]: string } = Object.fromEntries(
-    Object.entries(districtCodeMapping).map(([name, code]) => [name.toLowerCase(), name])
-);
-
+// Helper to match district names, accommodating slight variations.
+function getDistrictNameMatch(districtName: string): string | undefined {
+    const lowerCaseDistrict = districtName.toLowerCase();
+    const location = locations.find(l => l.level === 'district' && l.name.toLowerCase() === lowerCaseDistrict);
+    return location?.name;
+}
 
 export function getRealTimeSeriesData(districtName: string, disease: string): TimeSeriesDataPoint[] {
+    const matchedDistrictName = getDistrictNameMatch(districtName);
+    if (!matchedDistrictName) return [];
+
     if (disease === 'dengue') {
-        const districtCode = districtCodeMapping[districtName];
-        if (!districtCode) return [];
         const allData: any[] = modelOutput;
         return allData
-            .filter(item => item.district === districtCode)
+            .filter(item => item.district.toLowerCase() === matchedDistrictName.toLowerCase())
             .map(item => ({
                 date: item.date,
-                actual: item.predicted,
-                predicted: item.actual,
+                actual: item.actual,
+                predicted: item.predicted,
                 uncertainty: item.uncertainty,
                 is_outbreak: item.is_outbreak,
             }));
     } else if (disease === 'diarrhoea') {
-        const normalizedDistrictName = districtName.toLowerCase();
-        return getDiarrhoeaTimeSeriesData(normalizedDistrictName);
+        const allData: any[] = diarrhoeaData;
+        return allData
+            .filter(item => item.district.toLowerCase() === matchedDistrictName.toLowerCase())
+            .map(item => ({
+                date: item.date,
+                actual: item.actual,
+                predicted: item.predicted,
+                uncertainty: item.uncertainty,
+                is_outbreak: item.is_outbreak,
+            }));
     }
-    // Return empty for malaria or other diseases for now
+    // Return empty for malaria as it doesn't have a time-series view
     return [];
 }
 
-
-export function getDiarrhoeaTimeSeriesData(districtName: string): TimeSeriesDataPoint[] {
-    const allData: any[] = diarrhoeaData;
-    return allData
-        .filter(item => item.district.toLowerCase() === districtName)
-        .map(item => ({
-            date: item.date,
-            actual: item.actual,
-            predicted: item.predicted,
-            uncertainty: item.uncertainty,
-            is_outbreak: item.is_outbreak,
-        }));
-}
 
 export const getAggregatedDenguePredictions = (): { [districtName: string]: number } => {
   const allData: any[] = modelOutput;
   const totals: { [districtName: string]: number } = {};
 
   allData.forEach(item => {
-    const districtName = districtNameMapping[item.district];
+    const districtName = item.district;
     if (districtName) {
       if (!totals[districtName]) {
         totals[districtName] = 0;
@@ -118,7 +80,12 @@ export const getAggregatedDiarrhoeaPredictions = (): { [districtName: string]: n
   const totals: { [districtName: string]: number } = {};
   
   allData.forEach(item => {
-    const districtName = diarrhoeaDistrictMapping[item.district.toLowerCase()];
+    // Correctly match the lowercase district from JSON to the proper-case name
+    const geojsonDistrictName = Object.keys(locations).find(
+        (key: any) => locations[key].name.toLowerCase() === item.district.toLowerCase() && locations[key].level === 'district'
+    );
+    const districtName = geojsonDistrictName ? locations[geojsonDistrictName].name : item.district;
+
     if (districtName) {
       if (!totals[districtName]) {
         totals[districtName] = 0;
@@ -162,7 +129,6 @@ export const genlandDistricts = [
 
 export const weatherData: WeatherData[] = [
   { label: 'Temperature', value: '30.5°C' },
-  { label: 'Humidity', value: '88%' },
+  { label: 'Humidity', value: '75%' },
   { label: 'Rainfall', value: '0mm' },
 ];
-    
