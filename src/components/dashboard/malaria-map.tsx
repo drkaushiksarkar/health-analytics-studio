@@ -6,6 +6,7 @@ import * as turf from '@turf/turf';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
+import Papa from 'papaparse';
 
 const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] }) => (
   <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-w-xs">
@@ -44,23 +45,44 @@ export default function MalariaMap() {
     "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"
   ];
 
-  useEffect(() => {
-    fetch('/geo/malaria.geojson')
-      .then(res => res.json())
-      .then(data => {
-        // Pre-process data to flatten timeseries for easier map rendering
-        const processedFeatures = data.features.map((feature: any) => {
-          if (feature.properties.timeseries) {
-            feature.properties.timeseries.forEach((monthlyData: any, index: number) => {
-              feature.properties[`rate_${index}`] = monthlyData.predicted_rate;
-            });
-          }
-          return feature;
-        });
-        data.features = processedFeatures;
-        setGeojsonData(data);
+ useEffect(() => {
+    async function loadData() {
+      const [geojsonRes, csvRes] = await Promise.all([
+        fetch('/geo/upazilas.geojson'),
+        fetch('/geo/malaria_predictions.csv')
+      ]);
+
+      const geojson = await geojsonRes.json();
+      const csvText = await csvRes.text();
+
+      Papa.parse(csvText, {
+        header: true,
+        dynamicTyping: true,
+        complete: (results) => {
+          const predictionsByUpazila: { [key: string]: any } = {};
+          results.data.forEach((row: any) => {
+            predictionsByUpazila[row.UpazilaID] = row;
+          });
+
+          const processedFeatures = geojson.features.map((feature: any) => {
+            const upazilaId = feature.properties.UpazilaID;
+            const predictions = predictionsByUpazila[upazilaId];
+            if (predictions) {
+              monthLabels.forEach((month, index) => {
+                feature.properties[`rate_${index}`] = predictions[month];
+              });
+            }
+            return feature;
+          });
+
+          geojson.features = processedFeatures;
+          setGeojsonData(geojson);
+        }
       });
-  }, []);
+    }
+
+    loadData();
+  }, [monthLabels]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !geojsonData) return;
