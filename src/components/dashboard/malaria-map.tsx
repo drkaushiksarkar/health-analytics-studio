@@ -16,7 +16,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
                 <div key={i} className="flex items-center gap-2">
                     <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
                     <span className="text-xs">
-                        {i === 0 ? `< ${stops[i + 1][0].toExponential(1)}` : i === stops.length - 1 ? `> ${value.toExponential(1)}` : `${value.toExponential(1)} - ${stops[i + 1]?.[0].toExponential(1) ?? ''}`}
+                        {i === 0 ? `< ${stops[i + 1][0]}` : i === stops.length - 1 ? `> ${value}` : `${value} - ${stops[i + 1]?.[0] ?? ''}`}
                     </span>
                 </div>
             ))}
