@@ -13,8 +13,8 @@ export { locations };
 
 export const diseases: Disease[] = [
   { id: 'dengue', name: 'Dengue' },
-  { id: 'influenza', name: 'Influenza' },
   { id: 'malaria', name: 'Malaria' },
+  { id: 'diarrhoea', name: 'Acute Watery Diarrhoea' },
 ];
 
 export const districtCodeMapping: { [key: string]: string } = {
