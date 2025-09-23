@@ -27,10 +27,10 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
   // If there's no data, show a message
   if (data.length === 0) {
     return (
-        <Card className="col-span-2">
+        <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Disease Case Trends</CardTitle>
-                <CardDescription>Actual vs. Predicted Cases Over Time</CardDescription>
+                <CardDescription>Predicted Cases Over Time</CardDescription>
             </CardHeader>
             <CardContent className="flex h-[300px] items-center justify-center">
                 <p className="text-muted-foreground">No prediction data available for the selected district.</p>
@@ -40,20 +40,14 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
   }
 
   return (
-    <Card className="col-span-2">
+    <Card>
       <CardHeader>
         <CardTitle className="font-headline">Disease Case Trends</CardTitle>
-        <CardDescription>Actual vs. Predicted Cases Over Time</CardDescription>
+        <CardDescription>Predicted Cases and Uncertainty Interval</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={data}>
-            <defs>
-              <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
             <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
@@ -88,16 +82,6 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
               name="Predicted"
               connectNulls={true}
             />
-
-            <Area 
-                type="monotone" 
-                dataKey="actual" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2} 
-                fill="url(#colorActual)"
-                name="Actual Cases"
-                connectNulls={true} // Connect line over null data points
-            />
             
             {outbreaks.map((outbreak) => (
               <ReferenceLine
@@ -117,3 +101,5 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
     </Card>
   );
 }
+
+    
