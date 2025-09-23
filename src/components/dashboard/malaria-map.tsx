@@ -15,7 +15,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
         <div key={i} className="flex items-center gap-2">
           <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
           <span className="text-xs">
-            {i === 0 ? `< ${stops[1][0]}` : i === stops.length - 1 ? `> ${value}` : `${value} - ${stops[i + 1][0]}`}
+            {i === 0 ? `< ${stops[1][0]}` : i === stops.length - 1 ? `≥ ${value}` : `${value} - ${stops[i + 1][0]}`}
           </span>
         </div>
       ))}
@@ -38,16 +38,6 @@ export default function MalariaMap() {
     [0.8, '#ae017e'],
     [1.0, '#7a0177'],
   ], []);
-
-  const getFillColor = (value: number | undefined): string => {
-    if (value === undefined) return '#CCCCCC'; // Default color for no data
-    for (let i = colorStops.length - 1; i >= 0; i--) {
-      if (value >= colorStops[i][0]) {
-        return colorStops[i][1];
-      }
-    }
-    return colorStops[0][1];
-  };
 
   useEffect(() => {
     fetch('/geo/malaria.geojson')
@@ -97,7 +87,7 @@ export default function MalariaMap() {
         source: 'malaria-data',
         paint: {
           'fill-opacity': 0.7,
-          'fill-outline-color': '#000000',
+          'fill-outline-color': '#333',
         }
       });
       map.addLayer({
@@ -123,23 +113,12 @@ export default function MalariaMap() {
 
     const riskProperty = `week_${week}`;
 
-    geojsonData.features.forEach((feature: any) => {
-        feature.properties.currentRisk = feature.properties[riskProperty];
-    });
-
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
         ['get', riskProperty],
-        '#CCCCCC', // Default for no data
+        '#CCCCCC', // Default for no data or values below the first stop
         ...colorStops.flat()
-      ]
-    );
-
-    // Update the GeoJSON source to trigger a re-render with new properties if necessary
-    const source = map.getSource('malaria-data') as maplibregl.GeoJSONSource;
-    if(source) {
-        source.setData(geojsonData);
-    }
+    ]);
 
   }, [week, geojsonData, colorStops]);
 
