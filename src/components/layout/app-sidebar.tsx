@@ -23,8 +23,8 @@ export default function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <Biohazard className="size-8 text-primary" />
-          <span className="font-headline text-2xl font-semibold">
-            DiseaseVision
+          <span className="font-headline text-lg font-semibold">
+            EWARS Bangladesh
           </span>
         </div>
       </SidebarHeader>

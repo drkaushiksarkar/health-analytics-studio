@@ -42,7 +42,7 @@ export default function HelpDrawer() {
             <TabsContent value="setup" className="p-1">
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 <p>
-                  Welcome to DiseaseVision. This guide provides a step-by-step walkthrough of the dashboard's features to help you monitor disease dynamics effectively.
+                  Welcome to EWARS Bangladesh. This guide provides a step-by-step walkthrough of the dashboard's features to help you monitor disease dynamics effectively.
                 </p>
 
                 <Accordion type="single" collapsible defaultValue="item-1">
@@ -320,7 +320,7 @@ export default function HelpDrawer() {
                        <ol className="list-decimal pl-5">
                            <li>Copy the entire project folder (including the <code>.next</code> directory, <code>public</code>, and <code>package.json</code>) to your server using a tool like <code>scp</code> or <code>rsync</code>.</li>
                            <li>On the server, navigate to the project directory and install only the production dependencies: <code>npm install --omit=dev</code>.</li>
-                           <li>Use PM2 to start the Next.js application: <code>pm2 start npm --name "diseasevision" -- run start</code>. The <code>-- run start</code> part tells PM2 to execute the "start" script defined in your <code>package.json</code>.</li>
+                           <li>Use PM2 to start the Next.js application: <code>pm2 start npm --name "ewars-bangladesh" -- run start</code>. The <code>-- run start</code> part tells PM2 to execute the "start" script defined in your <code>package.json</code>.</li>
                            <li>Your application is now running. By default, it listens on port 9002 (as configured in `package.json`).</li>
                        </ol>
 
@@ -328,7 +328,7 @@ export default function HelpDrawer() {
                         <p>To serve your application on standard ports (like 80 for HTTP or 443 for HTTPS) and to handle SSL, you should use a reverse proxy like Nginx.</p>
                          <ol className="list-decimal pl-5">
                              <li>Install Nginx on your server.</li>
-                             <li>Create a new Nginx site configuration file (e.g., in <code>/etc/nginx/sites-available/diseasevision</code>).</li>
+                             <li>Create a new Nginx site configuration file (e.g., in <code>/etc/nginx/sites-available/ewars-bangladesh</code>).</li>
                              <li>Add a server block to proxy requests to your running Node.js application:
                                  <pre className="p-2 bg-muted rounded-md text-xs overflow-x-auto"><code>{`server {
     listen 80;

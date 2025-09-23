@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'DiseaseVision',
+  title: 'EWARS Bangladesh',
   description: 'An interactive dashboard for visualizing disease dynamics.',
 };
 

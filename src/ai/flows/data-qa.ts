@@ -31,7 +31,7 @@ const prompt = ai.definePrompt({
   name: 'dataQaPrompt',
   input: {schema: DataQaInputSchema},
   output: {schema: DataQaOutputSchema},
-  prompt: `You are an expert data analyst for the DiseaseVision dashboard. Your task is to answer a user's question based on the provided data context.
+  prompt: `You are an expert data analyst for the EWARS Bangladesh dashboard. Your task is to answer a user's question based on the provided data context.
   The data context includes a description of the available data sources and a JSON sample.
   Analyze the user's question and use the provided data to form a clear, concise, and accurate answer.
 
