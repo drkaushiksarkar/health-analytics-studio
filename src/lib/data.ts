@@ -60,8 +60,11 @@ export function getRealTimeSeriesData(districtName: string): TimeSeriesDataPoint
     return allData
         .filter(item => item.district === districtCode)
         .map(item => ({
-            ...item,
-            actual: item.actual ?? undefined, // Ensure null becomes undefined for the chart
+            date: item.date,
+            actual: item.predicted, // The JSON 'predicted' is the 'Actual Cases'
+            predicted: item.actual, // The JSON 'actual' (null) is for 'Predicted Cases'
+            uncertainty: item.uncertainty,
+            is_outbreak: item.is_outbreak,
         }));
 }
 
