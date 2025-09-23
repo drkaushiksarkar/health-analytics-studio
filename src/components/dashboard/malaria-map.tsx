@@ -64,7 +64,7 @@ export default function MalariaMap() {
             predictionsByUpazila[row.UpazilaID] = row;
           });
 
-          const processedFeatures = geojson.features.map((feature: any) => {
+          geojson.features.forEach((feature: any) => {
             const upazilaId = feature.properties.UpazilaID;
             const predictions = predictionsByUpazila[upazilaId];
             if (predictions) {
@@ -72,10 +72,7 @@ export default function MalariaMap() {
                 feature.properties[`rate_${index}`] = predictions[month];
               });
             }
-            return feature;
           });
-
-          geojson.features = processedFeatures;
           setGeojsonData(geojson);
         }
       });
@@ -85,7 +82,8 @@ export default function MalariaMap() {
   }, [monthLabels]);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current || !geojsonData) return;
+    if (!containerRef.current || !geojsonData) return;
+    if (mapRef.current) mapRef.current.remove();
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -108,6 +106,8 @@ export default function MalariaMap() {
       zoom: 7,
       attributionControl: false,
     });
+
+    mapRef.current = map;
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
@@ -152,8 +152,6 @@ export default function MalariaMap() {
         map.getCanvas().style.cursor = '';
       });
     });
-
-    mapRef.current = map;
 
     return () => mapRef.current?.remove();
   }, [geojsonData]);
