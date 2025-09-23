@@ -2,7 +2,8 @@
 
 import {
   Line,
-  LineChart,
+  AreaChart,
+  Area,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -36,11 +37,11 @@ export default function PredictedCasesChart({ data }: PredictedCasesChartProps) 
     <Card>
       <CardHeader>
         <CardTitle className="font-headline">Predicted Cases Trend</CardTitle>
-        <CardDescription>Predicted case counts over time</CardDescription>
+        <CardDescription>Predicted case counts and uncertainty interval</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
             <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
@@ -55,6 +56,15 @@ export default function PredictedCasesChart({ data }: PredictedCasesChartProps) 
               }}
             />
             <Legend />
+            <Area
+              type="monotone"
+              dataKey="uncertainty"
+              stroke="none"
+              fill="hsl(var(--accent))"
+              fillOpacity={0.3}
+              name="Prediction Uncertainty"
+              connectNulls={true}
+            />
             <Line
               type="monotone"
               dataKey="predicted"
@@ -64,7 +74,7 @@ export default function PredictedCasesChart({ data }: PredictedCasesChartProps) 
               name="Predicted Cases"
               connectNulls={true}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
