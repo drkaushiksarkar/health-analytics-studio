@@ -27,7 +27,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
 export default function MalariaMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
-  const [monthIndex, setMonthIndex] = useState(0); // 0-11 for Jan-Dec
+  const [monthIndex, setMonthIndex] = useState(0);
   const [geojsonData, setGeojsonData] = useState<any>(null);
 
   const colorStops: [number, string][] = useMemo(() => [
@@ -40,42 +40,57 @@ export default function MalariaMap() {
     [1.0, '#7a0177'],
   ], []);
 
-  const monthLabels = [
+  const monthLabels = useMemo(() => [
     "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06",
     "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"
-  ];
+  ], []);
 
- useEffect(() => {
+  useEffect(() => {
     async function loadData() {
-      const [geojsonRes, csvRes] = await Promise.all([
-        fetch('/geo/upazilas.geojson'),
-        fetch('/geo/malaria_predictions.csv')
-      ]);
+      try {
+        const [geojsonRes, csvRes] = await Promise.all([
+          fetch('/geo/upazilas.geojson'),
+          fetch('/geo/malaria_predictions.csv')
+        ]);
 
-      const geojson = await geojsonRes.json();
-      const csvText = await csvRes.text();
-
-      Papa.parse(csvText, {
-        header: true,
-        dynamicTyping: true,
-        complete: (results) => {
-          const predictionsByUpazila: { [key: string]: any } = {};
-          results.data.forEach((row: any) => {
-            predictionsByUpazila[row.UpazilaID] = row;
-          });
-
-          geojson.features.forEach((feature: any) => {
-            const upazilaId = feature.properties.UpazilaID;
-            const predictions = predictionsByUpazila[upazilaId];
-            if (predictions) {
-              monthLabels.forEach((month, index) => {
-                feature.properties[`rate_${index}`] = predictions[month];
-              });
-            }
-          });
-          setGeojsonData(geojson);
+        if (!geojsonRes.ok || !csvRes.ok) {
+            console.error("Failed to fetch map data");
+            return;
         }
-      });
+
+        const geojson = await geojsonRes.json();
+        const csvText = await csvRes.text();
+
+        Papa.parse(csvText, {
+          header: true,
+          dynamicTyping: true,
+          complete: (results) => {
+            const predictionsByUpazila: { [key: string]: any } = {};
+            (results.data as any[]).forEach((row: any) => {
+              if (row.UpazilaID) {
+                predictionsByUpazila[row.UpazilaID] = row;
+              }
+            });
+
+            geojson.features.forEach((feature: any) => {
+              const upazilaId = feature.properties.UpazilaID;
+              const predictions = predictionsByUpazila[upazilaId];
+              if (predictions) {
+                monthLabels.forEach((month, index) => {
+                  feature.properties[`rate_${index}`] = predictions[month] || 0;
+                });
+              } else {
+                 monthLabels.forEach((month, index) => {
+                  feature.properties[`rate_${index}`] = 0;
+                });
+              }
+            });
+            setGeojsonData(geojson);
+          }
+        });
+      } catch (error) {
+          console.error("Error loading map data:", error);
+      }
     }
 
     loadData();
@@ -83,7 +98,11 @@ export default function MalariaMap() {
 
   useEffect(() => {
     if (!containerRef.current || !geojsonData) return;
-    if (mapRef.current) mapRef.current.remove();
+    
+    // Cleanup previous map instance if it exists
+    if (mapRef.current) {
+        mapRef.current.remove();
+    }
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -118,57 +137,84 @@ export default function MalariaMap() {
         data: geojsonData
       });
 
+      const riskProperty = `rate_${monthIndex}`;
+
       map.addLayer({
         id: 'malaria-fill',
         type: 'fill',
         source: 'malaria-data',
         paint: {
+          'fill-color': [
+            'step',
+            ['get', riskProperty],
+            '#CCCCCC', // Default for no data
+            ...colorStops.flat()
+          ],
           'fill-opacity': 0.7,
-          'fill-outline-color': '#333',
         }
       });
+      
       map.addLayer({
         id: 'malaria-outline',
         type: 'line',
         source: 'malaria-data',
-        paint: { 'line-width': 1, 'line-color': '#333' }
+        paint: { 'line-width': 0.5, 'line-color': '#333' }
       });
       
-      const bbox = turf.bbox(geojsonData) as LngLatBoundsLike;
-      map.fitBounds(bbox, { padding: 24 });
+      try {
+        const bbox = turf.bbox(geojsonData) as LngLatBoundsLike;
+        map.fitBounds(bbox, { padding: 24 });
+      } catch (e) {
+          console.error("Could not fit bounds", e);
+      }
 
       const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
       map.on('mousemove', 'malaria-fill', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties || {};
-        const rate = p[`rate_${monthIndex}`];
+        const rate = p[riskProperty];
         const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(2) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
       });
+      
       map.on('mouseleave', 'malaria-fill', () => {
         popup.remove();
         map.getCanvas().style.cursor = '';
       });
     });
 
-    return () => mapRef.current?.remove();
+    return () => map.remove();
   }, [geojsonData]);
 
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded() || !geojsonData) return;
+    if (!map || !map.isStyleLoaded()) return;
 
     const riskProperty = `rate_${monthIndex}`;
 
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
         ['get', riskProperty],
-        '#CCCCCC', // Default for no data or values below the first stop
+        '#CCCCCC', 
         ...colorStops.flat()
     ]);
+    
+    // Update tooltip content on month change
+    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+    map.off('mousemove', 'malaria-fill'); // Remove previous listener to avoid duplicates
+    map.on('mousemove', 'malaria-fill', (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        const p = f.properties || {};
+        const rate = p[riskProperty];
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(2) : 'No data'}</div>`;
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
 
   }, [monthIndex, geojsonData, colorStops]);
 
