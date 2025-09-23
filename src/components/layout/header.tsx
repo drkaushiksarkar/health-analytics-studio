@@ -31,6 +31,7 @@ import Link from 'next/link';
 import AppSidebar from './app-sidebar';
 import HelpDrawer from './help-drawer';
 import { searchAction } from '@/app/actions';
+import PartnerLogos from './partner-logos';
 
 export default function Header() {
   const userAvatar = PlaceHolderImages.find(img => img.id === 'user-avatar');
@@ -77,6 +78,9 @@ export default function Header() {
           <AppSidebar />
         </SheetContent>
       </Sheet>
+      <div className="hidden md:flex">
+        <PartnerLogos />
+      </div>
       <div className="relative ml-auto flex-1 md:grow-0">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
