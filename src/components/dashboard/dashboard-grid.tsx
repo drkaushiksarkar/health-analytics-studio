@@ -16,6 +16,7 @@ import RiskHeatmap from './risk-heatmap';
 import { getLiveWeatherData } from '@/lib/weather';
 import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
 import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
     try {
@@ -82,11 +83,19 @@ export default function DashboardGrid() {
             <TimeSeriesChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
         </div>
-        <DistrictSatelliteMap 
-            height="550px" 
-            showLabelsDefault={true}
-            predictionData={predictionData}
-          />
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Dengue Predicted Cases Heatmap</CardTitle>
+                <CardDescription>Total predicted dengue cases by district.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DistrictSatelliteMap 
+                    height="550px" 
+                    showLabelsDefault={true}
+                    predictionData={predictionData}
+                />
+            </CardContent>
+        </Card>
       </div>
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-2">
         <RiskHeatmap data={riskData} />
