@@ -49,7 +49,7 @@ export default function MalariaMap() {
     async function loadData() {
       try {
         const [geojsonRes, csvRes] = await Promise.all([
-          fetch('/geo/upazilas.geojson'),
+          fetch('/geo/malaria.geojson'),
           fetch('/geo/malaria_predictions.csv')
         ]);
 
@@ -99,7 +99,6 @@ export default function MalariaMap() {
   useEffect(() => {
     if (!containerRef.current || !geojsonData) return;
     
-    // Cleanup previous map instance if it exists
     if (mapRef.current) {
         mapRef.current.remove();
     }
@@ -147,7 +146,7 @@ export default function MalariaMap() {
           'fill-color': [
             'step',
             ['get', riskProperty],
-            '#CCCCCC', // Default for no data
+            '#CCCCCC',
             ...colorStops.flat()
           ],
           'fill-opacity': 0.7,
@@ -191,7 +190,7 @@ export default function MalariaMap() {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !map.isStyleLoaded() || !geojsonData) return;
 
     const riskProperty = `rate_${monthIndex}`;
 
@@ -252,3 +251,5 @@ export default function MalariaMap() {
     </Card>
   );
 }
+
+    
