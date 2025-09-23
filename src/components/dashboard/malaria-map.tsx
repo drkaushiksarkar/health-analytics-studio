@@ -143,21 +143,12 @@ export default function MalariaMap() {
         data: geojsonData
       });
       
-      const currentMonthLabel = monthLabels[monthIndex].substring(5,7);
-      const riskProperty = `rate_${species}_${currentMonthLabel}`;
-
       map.addLayer({
         id: 'malaria-fill',
         type: 'fill',
         source: 'malaria-data',
         paint: {
-          'fill-color': [
-            'step',
-            ['get', riskProperty],
-            colorStops[0][1],
-            ...colorStops.slice(1).flat()
-          ],
-          'fill-opacity': 0.7,
+            'fill-opacity': 0.7,
         }
       });
       
@@ -174,13 +165,35 @@ export default function MalariaMap() {
       } catch (e) {
           console.error("Could not fit bounds", e);
       }
+
+      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+    
+      const mouseMoveHandler = (e: any) => {
+          const f = e.features && e.features[0];
+          if (!f) return;
+          const p = f.properties || {};
+          const currentMonthLabel = monthLabels[monthIndex].substring(5,7);
+          const riskProperty = `rate_${species}_${currentMonthLabel}`;
+          const rate = p[riskProperty];
+          const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
+          popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+          map.getCanvas().style.cursor = 'pointer';
+      };
+  
+      const mouseLeaveHandler = () => {
+          popup.remove();
+          map.getCanvas().style.cursor = '';
+      };
+  
+      map.on('mousemove', 'malaria-fill', mouseMoveHandler);
+      map.on('mouseleave', 'malaria-fill', mouseLeaveHandler);
     });
 
     return () => {
         mapRef.current?.remove();
         mapRef.current = null;
     }
-  }, [geojsonData]);
+  }, [geojsonData]); // Only re-initialize the map if geojsonData changes
 
 
   useEffect(() => {
@@ -190,40 +203,23 @@ export default function MalariaMap() {
     const currentMonthLabel = monthLabels[monthIndex].substring(5,7);
     const riskProperty = `rate_${species}_${currentMonthLabel}`;
 
+    const fillColorExpression = [
+        'step',
+        ['get', riskProperty],
+        ...colorStops.slice(1).reduce((acc, stop) => acc.concat(stop[1], stop[0]), [colorStops[0][1]])
+    ];
+
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
         ['get', riskProperty],
-        colorStops[0][1],
-        ...colorStops.slice(1).flat()
+        colorStops[0][1], // Default color
+        colorStops[1][0], colorStops[1][1],
+        colorStops[2][0], colorStops[2][1],
+        colorStops[3][0], colorStops[3][1],
+        colorStops[4][0], colorStops[4][1],
+        colorStops[5][0], colorStops[5][1],
+        colorStops[6][0], colorStops[6][1],
     ]);
-    
-    // This logic needs to be inside the update effect to have access to the latest riskProperty
-    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
-    
-    // Use a single handler for mousemove to avoid attaching multiple listeners
-    const mouseMoveHandler = (e: any) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
-        const p = f.properties || {};
-        const rate = p[riskProperty];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
-        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
-        map.getCanvas().style.cursor = 'pointer';
-    };
-
-    const mouseLeaveHandler = () => {
-        popup.remove();
-        map.getCanvas().style.cursor = '';
-    };
-
-    map.on('mousemove', 'malaria-fill', mouseMoveHandler);
-    map.on('mouseleave', 'malaria-fill', mouseLeaveHandler);
-
-    // Cleanup function to remove listeners
-    return () => {
-        map.off('mousemove', 'malaria-fill', mouseMoveHandler);
-        map.off('mouseleave', 'malaria-fill', mouseLeaveHandler);
-    };
 
   }, [monthIndex, species, geojsonData, colorStops, monthLabels]);
 
