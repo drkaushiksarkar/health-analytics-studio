@@ -75,7 +75,7 @@ export default function MalariaMap() {
 
         Papa.parse(csvText, {
           header: true,
-          dynamicTyping: true,
+          dynamicTyping: true, // This is crucial to parse numbers correctly
           complete: (results) => {
             const predictionsByUpazila: { [key: string]: any } = {};
             (results.data as any[]).forEach((row: any) => {
@@ -90,9 +90,9 @@ export default function MalariaMap() {
               if (predictions) {
                 monthLabels.forEach((month) => {
                     const monthStr = month.substring(5,7); // 01, 02...
-                    feature.properties[`rate_vivax_${monthStr}`] = predictions[`rate_vivax_${month}`] || 0;
-                    feature.properties[`rate_falciparum_${monthStr}`] = predictions[`rate_falciparum_${month}`] || 0;
-                    feature.properties[`rate_mixed_${monthStr}`] = predictions[`rate_mixed_${month}`] || 0;
+                    feature.properties[`rate_vivax_${monthStr}`] = predictions[`rate_vivax_${month}`] ?? 0;
+                    feature.properties[`rate_falciparum_${monthStr}`] = predictions[`rate_falciparum_${month}`] ?? 0;
+                    feature.properties[`rate_mixed_${monthStr}`] = predictions[`rate_mixed_${month}`] ?? 0;
                 });
               }
             });
@@ -154,7 +154,7 @@ export default function MalariaMap() {
           'fill-color': [
             'step',
             ['get', riskProperty],
-            colorStops[0][1],
+            colorStops[0][1], // Default color
             ...colorStops.slice(1).flat()
           ],
           'fill-opacity': 0.7,
@@ -197,10 +197,11 @@ export default function MalariaMap() {
         ...colorStops.slice(1).flat()
     ]);
     
+    // Clear previous listeners
+    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
     map.off('mousemove', 'malaria-fill');
     map.off('mouseleave', 'malaria-fill');
     
-    const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
     map.on('mousemove', 'malaria-fill', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
