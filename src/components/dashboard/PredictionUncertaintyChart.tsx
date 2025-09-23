@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Line,
-  LineChart,
+  AreaChart,
+  Area,
   CartesianGrid,
   Legend,
   ResponsiveContainer,
@@ -13,20 +13,20 @@ import {
 import type { TimeSeriesDataPoint } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 
-interface PredictedCasesTrendChartProps {
+interface PredictionUncertaintyChartProps {
   data: TimeSeriesDataPoint[];
 }
 
-export default function PredictedCasesTrendChart({ data }: PredictedCasesTrendChartProps) {
+export default function PredictionUncertaintyChart({ data }: PredictionUncertaintyChartProps) {
   if (data.length === 0) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="font-headline">Predicted Cases Trend</CardTitle>
-                <CardDescription>Predicted case counts over time.</CardDescription>
+                <CardTitle className="font-headline">Prediction Uncertainty</CardTitle>
+                <CardDescription>Uncertainty interval for predictions.</CardDescription>
             </CardHeader>
             <CardContent className="flex h-[300px] items-center justify-center">
-                <p className="text-muted-foreground">No prediction data available for the selected district.</p>
+                <p className="text-muted-foreground">No prediction data available.</p>
             </CardContent>
         </Card>
     );
@@ -35,12 +35,12 @@ export default function PredictedCasesTrendChart({ data }: PredictedCasesTrendCh
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Predicted Cases Trend</CardTitle>
-        <CardDescription>Line chart of predicted case counts</CardDescription>
+        <CardTitle className="font-headline">Prediction Uncertainty</CardTitle>
+        <CardDescription>Shaded area representing the uncertainty interval</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="date" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
             <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
@@ -55,16 +55,15 @@ export default function PredictedCasesTrendChart({ data }: PredictedCasesTrendCh
               }}
             />
             <Legend />
-            <Line
+            <Area
               type="monotone"
-              dataKey="predicted"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              dot={false}
-              name="Predicted Cases"
-              connectNulls={true}
+              dataKey="uncertainty"
+              stroke="none"
+              fill="hsl(var(--accent))"
+              fillOpacity={0.4}
+              name="Prediction Uncertainty"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

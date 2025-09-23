@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import WeatherPanels from './weather-panels';
-import PredictedCasesChart from './PredictedCasesChart';
+import PredictedCasesTrendChart from './PredictedCasesTrendChart';
 import {
   getRealTimeSeriesData,
   riskData,
@@ -19,6 +19,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import MalariaMap from './malaria-map';
 import DiarrhoeaMap from './DiarrhoeaMap';
+import PredictionUncertaintyChart from './PredictionUncertaintyChart';
 
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
@@ -83,7 +84,8 @@ export default function DashboardGrid() {
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-3">
         <WeatherPanels weatherData={weatherData} error={weatherError} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <PredictedCasesChart data={timeSeriesData} />
+            <PredictedCasesTrendChart data={timeSeriesData} />
+            <PredictionUncertaintyChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
         </div>
          <div className="grid gap-4 sm:grid-cols-1">
