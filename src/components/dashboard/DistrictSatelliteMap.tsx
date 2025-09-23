@@ -6,18 +6,58 @@ import maplibregl, { Map, LngLatBoundsLike } from 'maplibre-gl';
 import * as turf from '@turf/turf';
 
 type Props = {
-  height?: string;            // e.g., "calc(100vh - 160px)"
+  height?: string;
   showLabelsDefault?: boolean;
+  predictionData?: { [districtName: string]: number };
 };
+
+const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] }) => (
+  <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-w-xs">
+    <h3 className="font-semibold text-sm mb-2">{title}</h3>
+    <div className="flex flex-col gap-1">
+      {stops.map(([value, color], i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
+          <span className="text-xs">
+            {i === 0 ? `< ${stops[i+1][0]}` : i === stops.length - 1 ? `> ${value}` : `${value} - ${stops[i+1][0]}`}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 export default function DistrictSatelliteMap({
   height = '70vh',
   showLabelsDefault = false,
+  predictionData = {}
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const legendContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const [basemap, setBasemap] = useState<'esri' | 'osm'>('esri');
   const [showLabels, setShowLabels] = useState<boolean>(showLabelsDefault);
+
+  const colorStops: [number, string][] = [
+    [0, '#ffffcc'],
+    [50, '#ffeda0'],
+    [200, '#fed976'],
+    [500, '#feb24c'],
+    [1000, '#fd8d3c'],
+    [2500, '#fc4e2a'],
+    [5000, '#e31a1c'],
+    [10000, '#b10026']
+  ];
+
+  const getFillColor = (value: number | undefined): string => {
+    if (value === undefined) return '#CCCCCC'; // Default color for no data
+    for (let i = colorStops.length - 1; i >= 0; i--) {
+        if (value >= colorStops[i][0]) {
+            return colorStops[i][1];
+        }
+    }
+    return colorStops[0][1];
+  };
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -37,14 +77,16 @@ export default function DistrictSatelliteMap({
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
+    
+    if (legendContainerRef.current) {
+        map.addControl(new maplibregl.NavigationControl({}), 'top-right');
+    }
 
     map.on('load', async () => {
       // Basemaps
       map.addSource('esri-world', {
         type: 'raster',
-        tiles: [
-          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-        ],
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
         attribution: '© Esri, Maxar, Earthstar Geographics',
       });
@@ -62,30 +104,41 @@ export default function DistrictSatelliteMap({
       const res = await fetch('/geo/districts.geojson');
       const gj = await res.json();
 
+      // Join prediction data
+      gj.features.forEach((feature: any) => {
+        const districtName = feature.properties.ADM2_EN;
+        const predictedCases = predictionData[districtName];
+        feature.properties.predictedCases = predictedCases;
+        feature.properties.fillColor = getFillColor(predictedCases);
+      });
+
       map.addSource('districts', {
         type: 'geojson',
         data: gj,
-        promoteId: 'ADM2_EN' // no stable id in file; ok for hover/selection
+        promoteId: 'ADM2_EN'
       });
 
       map.addLayer({
         id: 'district-fill',
         type: 'fill',
         source: 'districts',
-        paint: { 'fill-opacity': 0.15 }
+        paint: {
+          'fill-color': ['get', 'fillColor'],
+          'fill-opacity': 0.7,
+          'fill-outline-color': '#000000',
+        }
       });
       map.addLayer({
         id: 'district-outline',
         type: 'line',
         source: 'districts',
-        paint: { 'line-width': 1 }
+        paint: { 'line-width': 1, 'line-color': '#333' }
       });
 
-      // Fit to national bounds
       const bbox = turf.bbox(gj) as LngLatBoundsLike;
       map.fitBounds(bbox, { padding: 24 });
 
-      // Labels (centroids)
+      // Labels
       const centroids = {
         type: 'FeatureCollection',
         features: gj.features.map((f: any) => {
@@ -93,9 +146,7 @@ export default function DistrictSatelliteMap({
             const c = turf.centroid(f);
             c.properties = { ...f.properties };
             return c;
-          } catch {
-            return null;
-          }
+          } catch { return null; }
         }).filter(Boolean)
       };
       map.addSource('district-labels', { type: 'geojson', data: centroids });
@@ -117,13 +168,14 @@ export default function DistrictSatelliteMap({
         }
       });
 
-      // Tooltip popup on hover
+      // Tooltip
       const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
       map.on('mousemove', 'district-fill', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties || {};
-        const html = `<div style="font-size:12px; color: #000;"><b>District:</b> ${p.ADM2_EN || ''}<br/><b>Division:</b> ${p.ADM1_EN || ''}</div>`;
+        const cases = p.predictedCases !== undefined ? p.predictedCases.toLocaleString() : 'No data';
+        const html = `<div style="font-size:12px; color: #000;"><b>District:</b> ${p.ADM2_EN || ''}<br/><b>Predicted Cases:</b> ${cases}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -132,7 +184,7 @@ export default function DistrictSatelliteMap({
         map.getCanvas().style.cursor = '';
       });
 
-      // Click to zoom to district bounds
+      // Click to zoom
       map.on('click', 'district-fill', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
@@ -145,26 +197,20 @@ export default function DistrictSatelliteMap({
 
     mapRef.current = map;
     return () => mapRef.current?.remove();
-  }, [showLabelsDefault]);
+  }, [predictionData, showLabelsDefault]);
 
   // Toggle basemap
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
-
-    if (map.getLayer('esri-raster')) {
-        map.setLayoutProperty('esri-raster', 'visibility', basemap === 'esri' ? 'visible' : 'none');
-    }
-    if (map.getLayer('osm-raster')) {
-        map.setLayoutProperty('osm-raster', 'visibility', basemap === 'osm' ? 'visible' : 'none');
-    }
+    map.setLayoutProperty('esri-raster', 'visibility', basemap === 'esri' ? 'visible' : 'none');
+    map.setLayoutProperty('osm-raster', 'visibility', basemap === 'osm' ? 'visible' : 'none');
   }, [basemap]);
 
   // Toggle labels
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
-    
     const vis = showLabels ? 'visible' : 'none';
     if (map.getLayer('district-labels-layer')) {
       map.setLayoutProperty('district-labels-layer', 'visibility', vis);
@@ -172,30 +218,36 @@ export default function DistrictSatelliteMap({
   }, [showLabels]);
 
   return (
-    <div className="w-full">
-      <div className="mb-2 flex items-center gap-2">
-        <div className="inline-flex rounded border p-1 bg-white shadow">
-          <button
-            className={`px-2 py-1 text-sm rounded ${basemap==='esri' ? 'bg-slate-900 text-white' : ''}`}
-            onClick={() => setBasemap('esri')}
-            aria-pressed={basemap==='esri'}
-          >
-            Satellite
-          </button>
-          <button
-            className={`px-2 py-1 text-sm rounded ${basemap==='osm' ? 'bg-slate-900 text-white' : ''}`}
-            onClick={() => setBasemap('osm')}
-            aria-pressed={basemap==='osm'}
-          >
-            OSM
-          </button>
+    <div className="relative w-full">
+      <div className="absolute top-2 left-2 z-10 flex flex-col gap-2">
+         <div className="inline-flex rounded border p-1 bg-white shadow">
+            <button
+                className={`px-2 py-1 text-sm rounded ${basemap==='esri' ? 'bg-slate-900 text-white' : ''}`}
+                onClick={() => setBasemap('esri')}
+                aria-pressed={basemap==='esri'}
+            >
+                Satellite
+            </button>
+            <button
+                className={`px-2 py-1 text-sm rounded ${basemap==='osm' ? 'bg-slate-900 text-white' : ''}`}
+                onClick={() => setBasemap('osm')}
+                aria-pressed={basemap==='osm'}
+            >
+                OSM
+            </button>
         </div>
-        <label className="inline-flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={showLabels} onChange={(e)=>setShowLabels(e.target.checked)} />
-          District labels
+        <label className="inline-flex items-center gap-2 text-sm bg-white/80 backdrop-blur-sm px-2 py-1 rounded shadow">
+            <input type="checkbox" checked={showLabels} onChange={(e)=>setShowLabels(e.target.checked)} />
+            District labels
         </label>
       </div>
+
       <div ref={containerRef} style={{ height }} className="rounded-lg overflow-hidden shadow" />
+
+      <div ref={legendContainerRef} className="absolute bottom-2 left-2 z-10">
+          <MapLegend title="Total Predicted Cases" stops={colorStops} />
+      </div>
+
       <p className="mt-1 text-xs text-slate-500">
         Tiles © Esri, Maxar, Earthstar Geographics; © OpenStreetMap contributors.
       </p>

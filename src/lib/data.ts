@@ -68,6 +68,28 @@ export function getRealTimeSeriesData(districtName: string): TimeSeriesDataPoint
         }));
 }
 
+export const getAggregatedPredictions = (): { [districtName: string]: number } => {
+  const allData: any[] = modelOutput;
+  const totals: { [districtName: string]: number } = {};
+
+  const districtNameMapping = Object.fromEntries(
+    Object.entries(districtCodeMapping).map(([name, code]) => [code, name])
+  );
+
+  allData.forEach(item => {
+    const districtName = districtNameMapping[item.district];
+    if (districtName) {
+      if (!totals[districtName]) {
+        totals[districtName] = 0;
+      }
+      totals[districtName] += item.predicted || 0;
+    }
+  });
+
+  return totals;
+};
+
+
 export const generateTimeSeriesData = (days = 30): TimeSeriesDataPoint[] => {
   const today = new Date();
   return Array.from({ length: days }).map((_, i) => {
