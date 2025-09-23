@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import maplibregl, { Map, LngLatBoundsLike } from 'maplibre-gl';
 import * as turf from '@turf/turf';
+import diarrhoeaData from '@/lib/diarrhoea-data.json';
 
 type Props = {
   height?: string;
   showLabelsDefault?: boolean;
-  predictionData?: { [districtName: string]: number };
 };
 
 const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] }) => (
@@ -19,7 +19,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
         <div key={i} className="flex items-center gap-2">
           <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
           <span className="text-xs">
-            {i === 0 ? `< ${stops[i+1][0]}` : i === stops.length - 1 ? `> ${value}` : `${value} - ${stops[i+1][0]}`}
+            {i === 0 ? `< ${stops[i+1][0]}` : i === stops.length - 1 ? `> ${value}` : `${value} - ${stops[i+1]?.[0] ?? ''}`}
           </span>
         </div>
       ))}
@@ -30,10 +30,8 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
 export default function DiarrhoeaMap({
   height = '550px',
   showLabelsDefault = true,
-  predictionData = {}
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const legendContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
 
   const colorStops: [number, string][] = [
@@ -47,18 +45,8 @@ export default function DiarrhoeaMap({
     [100, '#6e016b']
   ];
 
-  const getFillColor = (value: number | undefined): string => {
-    if (value === undefined) return '#CCCCCC'; // Default color for no data
-    for (let i = colorStops.length - 1; i >= 0; i--) {
-        if (value >= colorStops[i][0]) {
-            return colorStops[i][1];
-        }
-    }
-    return colorStops[0][1];
-  };
-
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (mapRef.current || !containerRef.current) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
@@ -86,14 +74,42 @@ export default function DiarrhoeaMap({
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'top-right');
 
     map.on('load', async () => {
+      // 1. Fetch GeoJSON
       const res = await fetch('/geo/districts.geojson');
       const gj = await res.json();
 
+      // 2. Process and aggregate prediction data
+      const predictionData: { [districtName: string]: number } = {};
+      const districtNameMapping: { [key: string]: string } = {};
+
+      diarrhoeaData.forEach((item: any) => {
+        const districtName = item.district.charAt(0).toUpperCase() + item.district.slice(1);
+        if (!districtNameMapping[item.district]) {
+            // Find the canonical name from GeoJSON to handle casing differences
+            const geoFeature = gj.features.find((f: any) => f.properties.ADM2_EN.toLowerCase() === item.district.toLowerCase());
+            if (geoFeature) {
+                districtNameMapping[item.district] = geoFeature.properties.ADM2_EN;
+            }
+        }
+        
+        const canonicalName = districtNameMapping[item.district];
+        if (canonicalName) {
+            if (!predictionData[canonicalName]) {
+                predictionData[canonicalName] = 0;
+            }
+            predictionData[canonicalName] += item.predicted || 0;
+        }
+      });
+      
+      // 3. Join data into GeoJSON
       gj.features.forEach((feature: any) => {
         const districtName = feature.properties.ADM2_EN;
         const predictedCases = predictionData[districtName];
         feature.properties.predictedCases = predictedCases;
-        feature.properties.fillColor = getFillColor(predictedCases);
+        feature.properties.fillColor = 
+            predictedCases !== undefined 
+            ? (colorStops.slice().reverse().find(stop => predictedCases >= stop[0])?.[1] || '#CCCCCC') 
+            : '#CCCCCC';
       });
 
       map.addSource('districts', {
@@ -112,6 +128,7 @@ export default function DiarrhoeaMap({
           'fill-outline-color': '#000000',
         }
       });
+      
       map.addLayer({
         id: 'district-outline',
         type: 'line',
@@ -139,17 +156,18 @@ export default function DiarrhoeaMap({
     });
 
     mapRef.current = map;
-    return () => mapRef.current?.remove();
-  }, [predictionData, showLabelsDefault]);
+    return () => {
+        mapRef.current?.remove();
+        mapRef.current = null;
+    }
+  }, []);
 
   return (
     <div className="relative w-full">
       <div ref={containerRef} style={{ height }} className="rounded-lg overflow-hidden shadow" />
-      <div ref={legendContainerRef} className="absolute bottom-2 left-2 z-10">
+      <div className="absolute bottom-2 left-2 z-10">
           <MapLegend title="Total Predicted Cases" stops={colorStops} />
       </div>
     </div>
   );
 }
-
-    

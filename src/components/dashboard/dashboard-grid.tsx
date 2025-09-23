@@ -9,13 +9,12 @@ import {
   featureImportanceData,
   locations,
   getAggregatedDenguePredictions,
-  getAggregatedDiarrhoeaPredictions,
 } from '@/lib/data';
 import FeatureImportanceChart from './feature-importance-chart';
 import DistrictSatelliteMap from './DistrictSatelliteMap';
 import RiskHeatmap from './risk-heatmap';
 import { getLiveWeatherData } from '@/lib/weather';
-import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
+import type { WeatherData } from '@/lib/types';
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import MalariaMap from './malaria-map';
@@ -78,7 +77,6 @@ export default function DashboardGrid() {
   }, [districtId, disease]);
 
   const denguePredictionData = React.useMemo(() => getAggregatedDenguePredictions(), []);
-  const diarrhoeaPredictionData = React.useMemo(() => getAggregatedDiarrhoeaPredictions(), []);
 
   return (
     <div className="grid flex-1 items-start gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-5">
@@ -112,7 +110,6 @@ export default function DashboardGrid() {
                     <DiarrhoeaMap 
                         height="550px" 
                         showLabelsDefault={true}
-                        predictionData={diarrhoeaPredictionData}
                     />
                 </CardContent>
             </Card>
