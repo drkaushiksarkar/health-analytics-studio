@@ -15,7 +15,7 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
         <div key={i} className="flex items-center gap-2">
           <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
           <span className="text-xs">
-            {i === 0 ? `< ${stops[1][0]}` : i === stops.length - 1 ? `≥ ${value}` : `${value} - ${stops[i + 1][0]}`}
+             {i === 0 ? `< ${stops[1][0].toFixed(1)}` : i === stops.length - 1 ? `≥ ${value.toFixed(1)}` : `${value.toFixed(1)} - ${stops[i + 1][0].toFixed(1)}`}
           </span>
         </div>
       ))}
@@ -26,11 +26,11 @@ const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] 
 export default function MalariaMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
-  const [week, setWeek] = useState(1);
+  const [monthIndex, setMonthIndex] = useState(0); // 0-11 for Jan-Dec
   const [geojsonData, setGeojsonData] = useState<any>(null);
 
   const colorStops: [number, string][] = useMemo(() => [
-    [0, '#feebe2'],
+    [0.0, '#feebe2'],
     [0.1, '#fcc5c0'],
     [0.2, '#fa9fb5'],
     [0.4, '#f768a1'],
@@ -39,10 +39,25 @@ export default function MalariaMap() {
     [1.0, '#7a0177'],
   ], []);
 
+  const monthLabels = [
+    "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06",
+    "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"
+  ];
+
   useEffect(() => {
     fetch('/geo/malaria.geojson')
       .then(res => res.json())
       .then(data => {
+        // Pre-process data to flatten timeseries for easier map rendering
+        const processedFeatures = data.features.map((feature: any) => {
+          if (feature.properties.timeseries) {
+            feature.properties.timeseries.forEach((monthlyData: any, index: number) => {
+              feature.properties[`rate_${index}`] = monthlyData.predicted_rate;
+            });
+          }
+          return feature;
+        });
+        data.features = processedFeatures;
         setGeojsonData(data);
       });
   }, []);
@@ -111,7 +126,7 @@ export default function MalariaMap() {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded() || !geojsonData) return;
 
-    const riskProperty = `week_${week}`;
+    const riskProperty = `rate_${monthIndex}`;
 
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
@@ -120,7 +135,7 @@ export default function MalariaMap() {
         ...colorStops.flat()
     ]);
 
-  }, [week, geojsonData, colorStops]);
+  }, [monthIndex, geojsonData, colorStops]);
 
 
   return (
@@ -128,27 +143,27 @@ export default function MalariaMap() {
       <CardHeader>
         <CardTitle className="font-headline">Malaria Geospatial Risk Map</CardTitle>
         <CardDescription>
-          Weekly simulated malaria risk by upazila. Current week: {week}
+          Monthly simulated malaria risk by upazila. Current month: {monthLabels[monthIndex]}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="relative w-full">
             <div className="absolute top-2 left-2 z-10">
-                <MapLegend title="Malaria Risk" stops={colorStops} />
+                <MapLegend title="Malaria Risk Rate" stops={colorStops} />
             </div>
             <div ref={containerRef} style={{ height: '550px' }} className="rounded-lg overflow-hidden shadow" />
             <div className="grid gap-2 pt-4">
-                <Label htmlFor="week-slider">Week Selector</Label>
+                <Label htmlFor="month-slider">Month Selector</Label>
                 <div className="flex items-center gap-4">
                     <Slider
-                        id="week-slider"
-                        min={1}
-                        max={52}
+                        id="month-slider"
+                        min={0}
+                        max={11}
                         step={1}
-                        value={[week]}
-                        onValueChange={(value) => setWeek(value[0])}
+                        value={[monthIndex]}
+                        onValueChange={(value) => setMonthIndex(value[0])}
                     />
-                    <span className="text-sm font-medium w-10 text-center">{week}</span>
+                    <span className="text-sm font-medium w-24 text-center">{monthLabels[monthIndex]}</span>
                 </div>
             </div>
         </div>
