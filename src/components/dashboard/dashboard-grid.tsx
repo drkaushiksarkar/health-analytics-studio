@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import WeatherPanels from './weather-panels';
-import TimeSeriesChart from './time-series-chart';
+import PredictedCasesChart from './PredictedCasesChart';
 import {
   getRealTimeSeriesData,
   riskData,
@@ -83,7 +83,7 @@ export default function DashboardGrid() {
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-3">
         <WeatherPanels weatherData={weatherData} error={weatherError} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <TimeSeriesChart data={timeSeriesData} />
+            <PredictedCasesChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
         </div>
          <div className="grid gap-4 sm:grid-cols-1">
