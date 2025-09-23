@@ -17,6 +17,7 @@ import { getLiveWeatherData } from '@/lib/weather';
 import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import MalariaMap from './malaria-map';
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
     try {
@@ -96,6 +97,7 @@ export default function DashboardGrid() {
                 />
             </CardContent>
         </Card>
+        <MalariaMap />
       </div>
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-2">
         <RiskHeatmap data={riskData} />
