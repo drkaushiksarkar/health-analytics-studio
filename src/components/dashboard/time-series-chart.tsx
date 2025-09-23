@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -85,6 +86,7 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
               strokeWidth={2}
               dot={false}
               name="Predicted"
+              connectNulls={true}
             />
 
             <Area 
@@ -93,7 +95,7 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
                 fill="url(#colorActual)"
-                name="Predicted Cases"
+                name="Actual Cases"
                 connectNulls={true} // Connect line over null data points
             />
             
