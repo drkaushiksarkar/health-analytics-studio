@@ -4,15 +4,16 @@ import { useSearchParams } from 'next/navigation';
 import WeatherPanels from './weather-panels';
 import TimeSeriesChart from './time-series-chart';
 import {
-  generateTimeSeriesData,
+  getRealTimeSeriesData,
   riskData,
   featureImportanceData,
+  locations,
 } from '@/lib/data';
 import FeatureImportanceChart from './feature-importance-chart';
 import ChoroplethMap from './choropleth-map';
 import RiskHeatmap from './risk-heatmap';
 import { getLiveWeatherData } from '@/lib/weather';
-import type { WeatherData } from '@/lib/types';
+import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
 import React from 'react';
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
@@ -49,7 +50,7 @@ async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error:
 
 export default function DashboardGrid() {
   const searchParams = useSearchParams();
-  const location = searchParams.get('district') || 'dhaka-dist';
+  const districtId = searchParams.get('district') || '47'; // Default to Dhaka district
   const disease = searchParams.get('disease') || 'dengue';
 
   const [weatherData, setWeatherData] = React.useState<WeatherData[]>([]);
@@ -64,8 +65,11 @@ export default function DashboardGrid() {
     loadWeather();
   }, []);
 
-  // In a real app, you would fetch data based on filters
-  const timeSeriesData = generateTimeSeriesData(60);
+  const timeSeriesData = React.useMemo(() => {
+    const selectedDistrict = locations.find(l => l.id === districtId && l.level === 'district');
+    const districtName = selectedDistrict ? selectedDistrict.name : 'Dhaka'; // Fallback to Dhaka
+    return getRealTimeSeriesData(districtName);
+  }, [districtId]);
 
   return (
     <div className="grid flex-1 items-start gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-5">

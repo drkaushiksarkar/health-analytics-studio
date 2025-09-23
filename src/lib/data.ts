@@ -7,6 +7,7 @@ import type {
 } from '@/lib/types';
 import { subDays, format } from 'date-fns';
 import { locations } from '@/lib/locations';
+import modelOutput from '@/lib/model-output.json';
 
 export { locations };
 
@@ -15,6 +16,54 @@ export const diseases: Disease[] = [
   { id: 'influenza', name: 'Influenza' },
   { id: 'malaria', name: 'Malaria' },
 ];
+
+export const districtCodeMapping: { [key: string]: string } = {
+  "Bagerhat": "1",
+  "Barishal": "2",
+  "Bhola": "3",
+  "Bogura": "4",
+  "Chandpur": "5",
+  "Chattogram": "6",
+  "Chuadanga": "7",
+  "Cox's Bazar": "8",
+  "Cumilla": "9",
+  "Dhaka": "10",
+  "Dinajpur": "11",
+  "Faridpur": "12",
+  "Feni": "13",
+  "Jashore": "14",
+  "Khulna": "15",
+  "Madaripur": "16",
+  "Moulvibazar": "17",
+  "Mymensingh": "18",
+  "Nilphamari": "19",
+  "Noakhali": "20",
+  "Pabna": "21",
+  "Patuakhali": "22",
+  "Rajshahi": "23",
+  "Rangamati": "24",
+  "Rangpur": "25",
+  "Satkhira": "26",
+  "Sylhet": "27",
+  "Tangail": "28",
+};
+
+export function getRealTimeSeriesData(districtName: string): TimeSeriesDataPoint[] {
+    const districtCode = districtCodeMapping[districtName];
+    if (!districtCode) {
+        return [];
+    }
+
+    // The JSON data is typed as any because it's coming from a JSON file.
+    const allData: any[] = modelOutput;
+
+    return allData
+        .filter(item => item.district === districtCode)
+        .map(item => ({
+            ...item,
+            actual: item.actual ?? undefined, // Ensure null becomes undefined for the chart
+        }));
+}
 
 export const generateTimeSeriesData = (days = 30): TimeSeriesDataPoint[] => {
   const today = new Date();

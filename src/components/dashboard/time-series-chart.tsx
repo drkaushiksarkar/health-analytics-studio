@@ -23,6 +23,21 @@ interface TimeSeriesChartProps {
 export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
   const outbreaks = data.filter((d) => d.is_outbreak);
 
+  // If there's no data, show a message
+  if (data.length === 0) {
+    return (
+        <Card className="col-span-2">
+            <CardHeader>
+                <CardTitle className="font-headline">Disease Case Trends</CardTitle>
+                <CardDescription>Actual vs. Predicted Cases Over Time</CardDescription>
+            </CardHeader>
+            <CardContent className="flex h-[300px] items-center justify-center">
+                <p className="text-muted-foreground">No prediction data available for the selected district.</p>
+            </CardContent>
+        </Card>
+    );
+  }
+
   return (
     <Card className="col-span-2">
       <CardHeader>
@@ -79,6 +94,7 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
                 strokeWidth={2} 
                 fill="url(#colorActual)"
                 name="Actual Cases"
+                connectNulls={true} // Connect line over null data points
             />
             
             {outbreaks.map((outbreak) => (

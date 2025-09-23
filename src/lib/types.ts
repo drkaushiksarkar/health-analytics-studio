@@ -12,7 +12,8 @@ export type Disease = {
 
 export type TimeSeriesDataPoint = {
   date: string;
-  actual: number;
+  district?: string;
+  actual?: number | null;
   predicted: number;
   uncertainty?: [number, number]; // [low, high]
   is_outbreak?: boolean;
