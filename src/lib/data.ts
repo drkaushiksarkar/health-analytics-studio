@@ -30,31 +30,25 @@ export function getRealTimeSeriesData(districtName: string, disease: string): Ti
     const matchedDistrictName = getDistrictNameMatch(districtName);
     if (!matchedDistrictName) return [];
 
+    let sourceData: any[];
     if (disease === 'dengue') {
-        const allData: any[] = modelOutput;
-        return allData
-            .filter(item => item.district.toLowerCase() === matchedDistrictName.toLowerCase())
-            .map(item => ({
-                date: item.date,
-                actual: item.actual,
-                predicted: item.predicted,
-                uncertainty: item.uncertainty,
-                is_outbreak: item.is_outbreak,
-            }));
+        sourceData = modelOutput;
     } else if (disease === 'diarrhoea') {
-        const allData: any[] = diarrhoeaData;
-        return allData
-            .filter(item => item.district.toLowerCase() === matchedDistrictName.toLowerCase())
-            .map(item => ({
-                date: item.date,
-                actual: item.actual,
-                predicted: item.predicted,
-                uncertainty: item.uncertainty,
-                is_outbreak: item.is_outbreak,
-            }));
+        sourceData = diarrhoeaData;
+    } else {
+        // Return empty for malaria as it doesn't have a time-series view
+        return [];
     }
-    // Return empty for malaria as it doesn't have a time-series view
-    return [];
+    
+    return sourceData
+        .filter(item => item.district.toLowerCase() === matchedDistrictName.toLowerCase())
+        .map((item): TimeSeriesDataPoint => ({
+            date: item.date,
+            actual: item.actual,
+            predicted: item.predicted,
+            uncertainty: item.uncertainty,
+            is_outbreak: item.is_outbreak,
+        }));
 }
 
 
