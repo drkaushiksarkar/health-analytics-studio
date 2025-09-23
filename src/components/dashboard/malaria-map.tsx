@@ -8,16 +8,14 @@ import { Slider } from '../ui/slider';
 import { Label } from '../ui/label';
 import Papa from 'papaparse';
 
-const MapLegend = ({ title, stops }: { title: string, stops: [number, string][] }) => (
+const MapLegend = ({ title, stops, labels }: { title: string, stops: [number, string][], labels: string[] }) => (
   <div className="bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-md max-w-xs">
     <h3 className="font-semibold text-sm mb-2">{title}</h3>
     <div className="flex flex-col gap-1">
       {stops.map(([value, color], i) => (
         <div key={i} className="flex items-center gap-2">
           <span style={{ backgroundColor: color }} className="w-4 h-4 rounded-sm border border-black/20" />
-          <span className="text-xs">
-             {i === 0 ? `< ${stops[1][0].toFixed(2)}` : i === stops.length - 1 ? `≥ ${value.toFixed(2)}` : `${value.toFixed(2)} - ${stops[i + 1][0].toFixed(2)}`}
-          </span>
+          <span className="text-xs">{labels[i]}</span>
         </div>
       ))}
     </div>
@@ -31,14 +29,25 @@ export default function MalariaMap() {
   const [geojsonData, setGeojsonData] = useState<any>(null);
 
   const colorStops: [number, string][] = useMemo(() => [
-    [0.0, '#feebe2'],
-    [0.05, '#fcc5c0'],
-    [0.1, '#fa9fb5'],
-    [0.15, '#f768a1'],
-    [0.2, '#dd3497'],
-    [0.3, '#ae017e'],
-    [0.4, '#7a0177'],
+    [-Infinity, '#2c7bb6'],     // Very low
+    [-8.70e-6, '#abd9e9'],      // Low
+    [-1.23e-6, '#ffffbf'],      // Slightly below baseline
+    [0, '#fee090'],             // Slightly above baseline
+    [4.40e-6, '#fdae61'],       // Elevated
+    [1.03e-4, '#f46d43'],       // High
+    [2.41e-4, '#d73027']        // Very high
   ], []);
+
+  const legendLabels = [
+    'Very low (≤ -8.70e-06)',
+    'Low (-8.70e-06 to -1.23e-06)',
+    'Slightly below baseline (-1.23e-06 to 0)',
+    'Slightly above baseline (0 to 4.40e-06)',
+    'Elevated (4.40e-06 to 1.03e-04)',
+    'High (1.03e-04 to 2.41e-04)',
+    'Very high (≥ 2.41e-04)'
+  ];
+
 
   const monthLabels = useMemo(() => [
     "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06",
@@ -146,8 +155,8 @@ export default function MalariaMap() {
           'fill-color': [
             'step',
             ['get', riskProperty],
-            '#CCCCCC',
-            ...colorStops.flat()
+            colorStops[0][1], // Default color for values less than the first stop
+            ...colorStops.slice(1).flat()
           ],
           'fill-opacity': 0.7,
         }
@@ -173,7 +182,7 @@ export default function MalariaMap() {
         if (!f) return;
         const p = f.properties || {};
         const rate = p[`rate_${monthIndex}`];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(3) : 'No data'}</div>`;
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -185,7 +194,7 @@ export default function MalariaMap() {
     });
 
     return () => map.remove();
-  }, [geojsonData]);
+  }, [geojsonData, colorStops]);
 
 
   useEffect(() => {
@@ -197,8 +206,8 @@ export default function MalariaMap() {
     map.setPaintProperty('malaria-fill', 'fill-color', [
         'step',
         ['get', riskProperty],
-        '#CCCCCC', 
-        ...colorStops.flat()
+        colorStops[0][1],
+        ...colorStops.slice(1).flat()
     ]);
     
     // Update tooltip content on month change
@@ -209,7 +218,7 @@ export default function MalariaMap() {
         if (!f) return;
         const p = f.properties || {};
         const rate = p[riskProperty];
-        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(3) : 'No data'}</div>`;
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
     });
@@ -229,7 +238,7 @@ export default function MalariaMap() {
       <CardContent>
         <div className="relative w-full">
             <div className="absolute top-2 left-2 z-10">
-                <MapLegend title="Malaria Risk Rate" stops={colorStops} />
+                <MapLegend title="Malaria Risk Rate" stops={colorStops} labels={legendLabels} />
             </div>
             <div ref={containerRef} style={{ height: '550px' }} className="rounded-lg overflow-hidden shadow" />
             <div className="grid gap-2 pt-4">
