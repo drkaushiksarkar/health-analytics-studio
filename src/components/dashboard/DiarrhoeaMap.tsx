@@ -78,33 +78,21 @@ export default function DiarrhoeaMap({
       const res = await fetch('/geo/districts.geojson');
       const gj = await res.json();
 
-      // 2. Process and aggregate prediction data
+      // 2. Process and aggregate prediction data into a case-insensitive map
       const predictionData: { [districtName: string]: number } = {};
-      const districtNameMapping: { [key: string]: string } = {};
-
       diarrhoeaData.forEach((item: any) => {
-        const districtName = item.district.charAt(0).toUpperCase() + item.district.slice(1);
-        if (!districtNameMapping[item.district]) {
-            // Find the canonical name from GeoJSON to handle casing differences
-            const geoFeature = gj.features.find((f: any) => f.properties.ADM2_EN.toLowerCase() === item.district.toLowerCase());
-            if (geoFeature) {
-                districtNameMapping[item.district] = geoFeature.properties.ADM2_EN;
-            }
+        const districtName = item.district.toLowerCase();
+        if (!predictionData[districtName]) {
+            predictionData[districtName] = 0;
         }
-        
-        const canonicalName = districtNameMapping[item.district];
-        if (canonicalName) {
-            if (!predictionData[canonicalName]) {
-                predictionData[canonicalName] = 0;
-            }
-            predictionData[canonicalName] += item.predicted || 0;
-        }
+        predictionData[districtName] += item.predicted || 0;
       });
       
       // 3. Join data into GeoJSON
       gj.features.forEach((feature: any) => {
-        const districtName = feature.properties.ADM2_EN;
-        const predictedCases = predictionData[districtName];
+        const geojsonDistrictName = feature.properties.ADM2_EN.toLowerCase();
+        const predictedCases = predictionData[geojsonDistrictName];
+        
         feature.properties.predictedCases = predictedCases;
         feature.properties.fillColor = 
             predictedCases !== undefined 
