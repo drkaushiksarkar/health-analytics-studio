@@ -75,7 +75,7 @@ export default function MalariaMap() {
 
         Papa.parse(csvText, {
           header: true,
-          dynamicTyping: true, // This is crucial to parse numbers correctly
+          dynamicTyping: true,
           complete: (results) => {
             const predictionsByUpazila: { [key: string]: any } = {};
             (results.data as any[]).forEach((row: any) => {
@@ -89,7 +89,7 @@ export default function MalariaMap() {
               const predictions = predictionsByUpazila[upazilaId];
               if (predictions) {
                 monthLabels.forEach((month) => {
-                    const monthStr = month.substring(5,7); // 01, 02...
+                    const monthStr = month.substring(5,7);
                     feature.properties[`rate_vivax_${monthStr}`] = predictions[`rate_vivax_${month}`] ?? 0;
                     feature.properties[`rate_falciparum_${monthStr}`] = predictions[`rate_falciparum_${month}`] ?? 0;
                     feature.properties[`rate_mixed_${monthStr}`] = predictions[`rate_mixed_${month}`] ?? 0;
@@ -154,7 +154,7 @@ export default function MalariaMap() {
           'fill-color': [
             'step',
             ['get', riskProperty],
-            colorStops[0][1], // Default color
+            colorStops[0][1],
             ...colorStops.slice(1).flat()
           ],
           'fill-opacity': 0.7,
@@ -197,12 +197,11 @@ export default function MalariaMap() {
         ...colorStops.slice(1).flat()
     ]);
     
-    // Clear previous listeners
+    // This logic needs to be inside the update effect to have access to the latest riskProperty
     const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
-    map.off('mousemove', 'malaria-fill');
-    map.off('mouseleave', 'malaria-fill');
     
-    map.on('mousemove', 'malaria-fill', (e) => {
+    // Use a single handler for mousemove to avoid attaching multiple listeners
+    const mouseMoveHandler = (e: any) => {
         const f = e.features && e.features[0];
         if (!f) return;
         const p = f.properties || {};
@@ -210,12 +209,21 @@ export default function MalariaMap() {
         const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toExponential(2) : 'No data'}</div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
         map.getCanvas().style.cursor = 'pointer';
-    });
-    
-    map.on('mouseleave', 'malaria-fill', () => {
+    };
+
+    const mouseLeaveHandler = () => {
         popup.remove();
         map.getCanvas().style.cursor = '';
-    });
+    };
+
+    map.on('mousemove', 'malaria-fill', mouseMoveHandler);
+    map.on('mouseleave', 'malaria-fill', mouseLeaveHandler);
+
+    // Cleanup function to remove listeners
+    return () => {
+        map.off('mousemove', 'malaria-fill', mouseMoveHandler);
+        map.off('mouseleave', 'malaria-fill', mouseLeaveHandler);
+    };
 
   }, [monthIndex, species, geojsonData, colorStops, monthLabels]);
 
