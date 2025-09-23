@@ -92,12 +92,28 @@ export const getAggregatedDiarrhoeaPredictions = (): { [districtName: string]: n
 };
 
 
-export const riskData: RiskData[] = [
-  { id: '1', location: 'Mirpur', risk_category: 'High', risk_score: 89, change: 12 },
-  { id: '2', location: 'Gulshan', risk_category: 'Medium', risk_score: 65, change: -5 },
-  { id: '3', location: 'Dhanmondi', risk_category: 'Medium', risk_score: 72, change: 8 },
-  { id: '4', location: 'Savar', risk_category: 'Low', risk_score: 34, change: 2 },
-  { id: '5', location: 'Uttara', risk_category: 'High', risk_score: 92, change: 15 },
+export const dengueRiskData: RiskData[] = [
+  { id: '1', location: 'Mirpur, Dhaka', risk_category: 'High', risk_score: 92, change: 15 },
+  { id: '2', location: 'Uttara, Dhaka', risk_category: 'High', risk_score: 89, change: 8 },
+  { id: '3', location: 'Paltan, Dhaka', risk_category: 'Medium', risk_score: 74, change: -3 },
+  { id: '4', location: 'Agrabad, Chattogram', risk_category: 'Medium', risk_score: 68, change: 11 },
+  { id: '5', location: 'Savar, Dhaka', risk_category: 'Low', risk_score: 45, change: 2 },
+];
+
+export const malariaRiskData: RiskData[] = [
+  { id: '1', location: 'Khagrachari Sadar', risk_category: 'High', risk_score: 88, change: 9 },
+  { id: '2', location: 'Rangamati Sadar', risk_category: 'High', risk_score: 85, change: 5 },
+  { id: '3', location: 'Bandarban Sadar', risk_category: 'Medium', risk_score: 76, change: 14 },
+  { id: '4', location: 'Teknaf, Cox\'s Bazar', risk_category: 'Medium', risk_score: 65, change: -2 },
+  { id: '5', location: 'Kaptai, Rangamati', risk_category: 'Low', risk_score: 52, change: 1 },
+];
+
+export const diarrhoeaRiskData: RiskData[] = [
+  { id: '1', location: 'Mohammadpur, Dhaka', risk_category: 'High', risk_score: 94, change: 20 },
+  { id: '2', location: 'Sitakunda, Chattogram', risk_category: 'Medium', risk_score: 78, change: 10 },
+  { id: '3', location: 'Koyra, Khulna', risk_category: 'Medium', risk_score: 71, change: 5 },
+  { id: '4', location: 'Patuakhali Sadar', risk_category: 'Low', risk_score: 55, change: -4 },
+  { id: '5', location: 'Amtali, Barguna', risk_category: 'Low', risk_score: 49, change: 3 },
 ];
 
 export const featureImportanceData: FeatureImportance[] = [

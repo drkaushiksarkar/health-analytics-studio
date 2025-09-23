@@ -1,8 +1,9 @@
+
 "use server";
 
 import { generateReport } from '@/ai/flows/generate-report-from-prompt';
 import { answerQuestion } from '@/ai/flows/data-qa';
-import { riskData, featureImportanceData, genlandDistricts, locations } from '@/lib/data';
+import { dengueRiskData, featureImportanceData, genlandDistricts, locations } from '@/lib/data';
 
 export async function downloadReportAction(prompt: string) {
   try {
@@ -43,7 +44,7 @@ export async function searchAction(question: string) {
         const upazilas = locations.filter(l => l.level === 'upazila').slice(0, 10);
 
         const dataDescription = `The dashboard contains the following data sources:
-        - Risk Heatmap Data: Contains non-spatial risk scores for specific locations (upazilas/unions). Includes 'location', 'risk_category' ('High', 'Medium', 'Low'), 'risk_score' (0-100), and 'change' (weekly score change).
+        - Risk Heatmap Data: Contains non-spatial risk scores for specific locations (upazilas/unions). Includes 'location', 'risk_category' ('High', 'Medium', 'Low'), 'risk_score' (0-100), and 'change' (weekly score change). This data is available for Dengue.
         - Feature Importance Data: Shows the drivers of the prediction model. Includes 'feature' (e.g., 'Rainfall (14d lag)') and 'importance' (a positive or negative score).
         - Weather Data: Current weather panels. Includes 'Temperature', 'Humidity', and 'Rainfall' with their values.
         - Disease Incidence Map: A fictional map of 'Genland' with districts. Each district has a name and an 'incidence' rate (0.0 to 1.0).
@@ -51,7 +52,7 @@ export async function searchAction(question: string) {
         - Time Series Data: Not directly available for search, but provides historical and predicted case counts.`;
 
         const dataSample = JSON.stringify({
-            riskData,
+            riskData: dengueRiskData,
             featureImportanceData,
             weatherData: weatherDataSample,
             genlandDistricts,

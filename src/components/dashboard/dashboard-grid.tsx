@@ -5,7 +5,9 @@ import WeatherPanels from './weather-panels';
 import PredictedCasesTrendChart from './PredictedCasesTrendChart';
 import {
   getRealTimeSeriesData,
-  riskData,
+  dengueRiskData,
+  malariaRiskData,
+  diarrhoeaRiskData,
   featureImportanceData,
   locations,
   getAggregatedDenguePredictions,
@@ -14,7 +16,7 @@ import FeatureImportanceChart from './feature-importance-chart';
 import DistrictSatelliteMap from './DistrictSatelliteMap';
 import RiskHeatmap from './risk-heatmap';
 import { getLiveWeatherData } from '@/lib/weather';
-import type { WeatherData } from '@/lib/types';
+import type { WeatherData, RiskData } from '@/lib/types';
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import MalariaMap from './malaria-map';
@@ -76,6 +78,19 @@ export default function DashboardGrid() {
     const districtName = selectedDistrict ? selectedDistrict.name : 'Dhaka'; // Fallback to Dhaka
     return getRealTimeSeriesData(districtName, disease);
   }, [districtId, disease]);
+  
+  const riskDataForDisease: RiskData[] = React.useMemo(() => {
+    switch (disease) {
+      case 'dengue':
+        return dengueRiskData;
+      case 'malaria':
+        return malariaRiskData;
+      case 'diarrhoea':
+        return diarrhoeaRiskData;
+      default:
+        return dengueRiskData;
+    }
+  }, [disease]);
 
   const denguePredictionData = React.useMemo(() => getAggregatedDenguePredictions(), []);
 
@@ -118,7 +133,7 @@ export default function DashboardGrid() {
         </div>
       </div>
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-2">
-        <RiskHeatmap data={riskData} />
+        <RiskHeatmap data={riskDataForDisease} />
       </div>
     </div>
   );
