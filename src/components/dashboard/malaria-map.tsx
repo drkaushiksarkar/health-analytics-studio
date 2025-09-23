@@ -114,6 +114,21 @@ export default function MalariaMap() {
       
       const bbox = turf.bbox(geojsonData) as LngLatBoundsLike;
       map.fitBounds(bbox, { padding: 24 });
+
+      const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+      map.on('mousemove', 'malaria-fill', (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+        const p = f.properties || {};
+        const rate = p[`rate_${monthIndex}`];
+        const html = `<div style="font-size:12px; color: #000;"><b>Upazila:</b> ${p.UpazilaNameEng || ''}<br/><b>Risk Rate:</b> ${rate !== undefined ? rate.toFixed(2) : 'No data'}</div>`;
+        popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'malaria-fill', () => {
+        popup.remove();
+        map.getCanvas().style.cursor = '';
+      });
     });
 
     mapRef.current = map;
