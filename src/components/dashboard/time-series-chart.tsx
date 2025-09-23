@@ -93,7 +93,7 @@ export default function TimeSeriesChart({ data }: TimeSeriesChartProps) {
                 stroke="hsl(var(--primary))" 
                 strokeWidth={2} 
                 fill="url(#colorActual)"
-                name="Actual Cases"
+                name="Predicted Cases"
                 connectNulls={true} // Connect line over null data points
             />
             
