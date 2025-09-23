@@ -8,7 +8,8 @@ import {
   riskData,
   featureImportanceData,
   locations,
-  getAggregatedPredictions,
+  getAggregatedDenguePredictions,
+  getAggregatedDiarrhoeaPredictions,
 } from '@/lib/data';
 import FeatureImportanceChart from './feature-importance-chart';
 import DistrictSatelliteMap from './DistrictSatelliteMap';
@@ -18,6 +19,8 @@ import type { WeatherData, TimeSeriesDataPoint } from '@/lib/types';
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import MalariaMap from './malaria-map';
+import DiarrhoeaMap from './DiarrhoeaMap';
+
 
 async function fetchAndFormatWeatherData(): Promise<{data: WeatherData[], error: boolean}> {
     try {
@@ -71,10 +74,53 @@ export default function DashboardGrid() {
   const timeSeriesData = React.useMemo(() => {
     const selectedDistrict = locations.find(l => l.id === districtId && l.level === 'district');
     const districtName = selectedDistrict ? selectedDistrict.name : 'Dhaka'; // Fallback to Dhaka
-    return getRealTimeSeriesData(districtName);
-  }, [districtId]);
+    return getRealTimeSeriesData(districtName, disease);
+  }, [districtId, disease]);
 
-  const predictionData = React.useMemo(() => getAggregatedPredictions(), []);
+  const denguePredictionData = React.useMemo(() => getAggregatedDenguePredictions(), []);
+  const diarrhoeaPredictionData = React.useMemo(() => getAggregatedDiarrhoeaPredictions(), []);
+
+  const renderMap = () => {
+    switch(disease) {
+      case 'dengue':
+        return (
+          <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Dengue Predicted Cases Heatmap</CardTitle>
+                <CardDescription>Total predicted dengue cases by district.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DistrictSatelliteMap 
+                    height="550px" 
+                    showLabelsDefault={true}
+                    predictionData={denguePredictionData}
+                />
+            </CardContent>
+          </Card>
+        );
+      case 'malaria':
+        return <MalariaMap />;
+      case 'diarrhoea':
+        return (
+           <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Diarrhoea Predicted Cases Heatmap</CardTitle>
+                <CardDescription>Total predicted Acute Watery Diarrhoea cases by district.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DiarrhoeaMap 
+                    height="550px" 
+                    showLabelsDefault={true}
+                    predictionData={diarrhoeaPredictionData}
+                />
+            </CardContent>
+          </Card>
+        );
+      default:
+        return null;
+    }
+  }
+
 
   return (
     <div className="grid flex-1 items-start gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-5">
@@ -84,20 +130,7 @@ export default function DashboardGrid() {
             <TimeSeriesChart data={timeSeriesData} />
             <FeatureImportanceChart data={featureImportanceData} />
         </div>
-        <Card>
-            <CardHeader>
-                <CardTitle className="font-headline">Dengue Predicted Cases Heatmap</CardTitle>
-                <CardDescription>Total predicted dengue cases by district.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <DistrictSatelliteMap 
-                    height="550px" 
-                    showLabelsDefault={true}
-                    predictionData={predictionData}
-                />
-            </CardContent>
-        </Card>
-        <MalariaMap />
+        {renderMap()}
       </div>
       <div className="grid auto-rows-max items-start gap-4 sm:gap-6 lg:col-span-3 xl:col-span-2">
         <RiskHeatmap data={riskData} />
@@ -105,3 +138,4 @@ export default function DashboardGrid() {
     </div>
   );
 }
+    

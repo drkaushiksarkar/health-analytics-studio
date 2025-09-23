@@ -8,6 +8,8 @@ import type {
 import { subDays, format } from 'date-fns';
 import { locations } from '@/lib/locations';
 import modelOutput from '@/lib/model-output.json';
+import diarrhoeaData from '@/lib/diarrhoea-data.json';
+
 
 export { locations };
 
@@ -48,33 +50,55 @@ export const districtCodeMapping: { [key: string]: string } = {
   "Tangail": "28",
 };
 
-export function getRealTimeSeriesData(districtName: string): TimeSeriesDataPoint[] {
-    const districtCode = districtCodeMapping[districtName];
-    if (!districtCode) {
-        return [];
+// A reverse mapping to get district name from code
+const districtNameMapping = Object.fromEntries(
+    Object.entries(districtCodeMapping).map(([name, code]) => [code, name])
+);
+
+const diarrhoeaDistrictMapping: { [key: string]: string } = Object.fromEntries(
+    Object.entries(districtCodeMapping).map(([name, code]) => [name.toLowerCase(), name])
+);
+
+
+export function getRealTimeSeriesData(districtName: string, disease: string): TimeSeriesDataPoint[] {
+    if (disease === 'dengue') {
+        const districtCode = districtCodeMapping[districtName];
+        if (!districtCode) return [];
+        const allData: any[] = modelOutput;
+        return allData
+            .filter(item => item.district === districtCode)
+            .map(item => ({
+                date: item.date,
+                actual: item.predicted,
+                predicted: item.actual,
+                uncertainty: item.uncertainty,
+                is_outbreak: item.is_outbreak,
+            }));
+    } else if (disease === 'diarrhoea') {
+        const normalizedDistrictName = districtName.toLowerCase();
+        return getDiarrhoeaTimeSeriesData(normalizedDistrictName);
     }
+    // Return empty for malaria or other diseases for now
+    return [];
+}
 
-    // The JSON data is typed as any because it's coming from a JSON file.
-    const allData: any[] = modelOutput;
 
+export function getDiarrhoeaTimeSeriesData(districtName: string): TimeSeriesDataPoint[] {
+    const allData: any[] = diarrhoeaData;
     return allData
-        .filter(item => item.district === districtCode)
+        .filter(item => item.district.toLowerCase() === districtName)
         .map(item => ({
             date: item.date,
-            actual: item.predicted, // The JSON 'predicted' is the 'Actual Cases'
-            predicted: item.actual, // The JSON 'actual' (null) is for 'Predicted Cases'
+            actual: item.actual,
+            predicted: item.predicted,
             uncertainty: item.uncertainty,
             is_outbreak: item.is_outbreak,
         }));
 }
 
-export const getAggregatedPredictions = (): { [districtName: string]: number } => {
+export const getAggregatedDenguePredictions = (): { [districtName: string]: number } => {
   const allData: any[] = modelOutput;
   const totals: { [districtName: string]: number } = {};
-
-  const districtNameMapping = Object.fromEntries(
-    Object.entries(districtCodeMapping).map(([name, code]) => [code, name])
-  );
 
   allData.forEach(item => {
     const districtName = districtNameMapping[item.district];
@@ -89,27 +113,23 @@ export const getAggregatedPredictions = (): { [districtName: string]: number } =
   return totals;
 };
 
-
-export const generateTimeSeriesData = (days = 30): TimeSeriesDataPoint[] => {
-  const today = new Date();
-  return Array.from({ length: days }).map((_, i) => {
-    const date = subDays(today, days - 1 - i);
-    const baseActual = 50 + Math.sin(i / 5) * 20 + Math.random() * 10;
-    const actual = Math.max(0, Math.floor(baseActual));
-    const predicted = Math.max(0, Math.floor(baseActual * (0.8 + Math.random() * 0.4)));
-    const uncertaintyRange = predicted * 0.2;
-    return {
-      date: format(date, 'yyyy-MM-dd'),
-      actual,
-      predicted,
-      uncertainty: [
-        Math.max(0, Math.floor(predicted - uncertaintyRange)),
-        Math.floor(predicted + uncertaintyRange),
-      ],
-      is_outbreak: i === days - 5 || i === days - 15 ? true : false,
-    };
+export const getAggregatedDiarrhoeaPredictions = (): { [districtName: string]: number } => {
+  const allData: any[] = diarrhoeaData;
+  const totals: { [districtName: string]: number } = {};
+  
+  allData.forEach(item => {
+    const districtName = diarrhoeaDistrictMapping[item.district.toLowerCase()];
+    if (districtName) {
+      if (!totals[districtName]) {
+        totals[districtName] = 0;
+      }
+      totals[districtName] += item.predicted || 0;
+    }
   });
+
+  return totals;
 };
+
 
 export const riskData: RiskData[] = [
   { id: '1', location: 'Mirpur', risk_category: 'High', risk_score: 89, change: 12 },
@@ -145,3 +165,4 @@ export const weatherData: WeatherData[] = [
   { label: 'Humidity', value: '88%' },
   { label: 'Rainfall', value: '0mm' },
 ];
+    
