@@ -1,0 +1,26 @@
+"""Outbreak constants."""
+
+# Status codes
+OUTBREAK_STATUS_ACTIVE = "active"
+OUTBREAK_STATUS_INACTIVE = "inactive"
+OUTBREAK_STATUS_PENDING = "pending"
+OUTBREAK_STATUS_ERROR = "error"
+
+# Limits
+OUTBREAK_MAX_BATCH_SIZE = 1000
+OUTBREAK_DEFAULT_TIMEOUT = 30
+OUTBREAK_MAX_RETRIES = 3
+OUTBREAK_CACHE_TTL = 300
+
+# Field names
+OUTBREAK_FIELDS = [
+    "id", "name", "type", "status",
+    "metadata", "created_at", "updated_at",
+]
+
+ALL_STATUSES = [
+    OUTBREAK_STATUS_ACTIVE,
+    OUTBREAK_STATUS_INACTIVE,
+    OUTBREAK_STATUS_PENDING,
+    OUTBREAK_STATUS_ERROR,
+]
